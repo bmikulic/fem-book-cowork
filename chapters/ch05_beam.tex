@@ -1,43 +1,111 @@
 \chapter{Euler-Bernoulli Beam Element}
 \label{ch:beam}
 
-\section{Euler-Bernoulli Beam Element}
+% =============================================================================
+\section{Direct Formulation of the Beam Element}
+\label{sec:beam_direct}
+% =============================================================================
 
-The Euler-Bernoulli beam element models bending with the assumption that
-plane cross-sections remain plane and perpendicular to the neutral axis
-(no shear deformation).
+The Euler-Bernoulli beam element models transverse bending under the assumption
+that plane cross-sections remain plane and perpendicular to the neutral axis
+(no shear deformation). Consider a two-node element of length $L$, bending
+stiffness $EI$, with nodes~1 and~2 as shown in \cref{fig:beam_element}.
 
-\subsection{Degrees of Freedom}
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>=Stealth, x=1cm, y=1cm,
+    disp/.style={->,very thick,blue!70!black},
+    force/.style={->,ultra thick,red!75!black}]
 
-Each node has two DOFs: transverse displacement $v$ and rotation $\theta$
-(= $\dd v/\dd x$). The element has 4 DOFs total:
-$\vect{u}^e = [v_1,\, \theta_1,\, v_2,\, \theta_2]\transpose$.
+  %% Beam body
+  \fill[gray!22] (0,-0.22) rectangle (7,0.22);
+  \draw[thick] (0,-0.22) rectangle (7,0.22);
+  \node[above=4pt] at (3.5,0.22) {$E,\, I$};
 
-\subsection{Hermite Shape Functions}
+  %% Nodes
+  \filldraw (0,0) circle (3.5pt);
+  \filldraw (7,0) circle (3.5pt);
+  \node at (-0.28,-0.45) {\small\bfseries 1};
+  \node at (7.28,-0.45) {\small\bfseries 2};
 
-Cubic Hermite polynomials ensure $C^1$ continuity (continuous displacement
-and slope across elements):
-\begin{align}
-    H_1(x) &= 1 - 3\xi^2 + 2\xi^3 \notag \\
-    H_2(x) &= L(\xi - 2\xi^2 + \xi^3) \notag \\
-    H_3(x) &= 3\xi^2 - 2\xi^3 \notag \\
-    H_4(x) &= L(-\xi^2 + \xi^3)
-    \label{eq:hermite}
-\end{align}
-where $\xi = x/L \in [0,1]$.
+  %% Displacements (blue, above)
+  \draw[disp] (0, 0.65) -- ++(0,0.9) node[right=2pt,midway] {$v_1$};
+  \draw[disp] (7, 0.65) -- ++(0,0.9) node[right=2pt,midway] {$v_2$};
 
-\subsection{Beam Stiffness Matrix}
+  %% Rotations (blue curved arrows)
+  \draw[disp,->] (0.05, 1.70) arc[start angle=200, end angle=70, radius=0.55]
+        node[above left=-2pt] {$\theta_1$};
+  \draw[disp,->] (7.05, 1.70) arc[start angle=200, end angle=70, radius=0.55]
+        node[above left=-2pt] {$\theta_2$};
 
-The curvature is $\kappa = \dd^2 v/\dd x^2 = \matr{B}_b\, \vect{u}^e$ and the
-bending moment $M = EI\kappa$. The element stiffness is:
+  %% End forces (red, below)
+  \draw[force] (0,-0.65) -- ++(0,-0.8) node[right=2pt,midway] {$V_1$};
+  \draw[force] (7,-0.65) -- ++(0,-0.8) node[right=2pt,midway] {$V_2$};
+
+  %% End moments (red curved)
+  \draw[force,->] (0.05,-1.55) arc[start angle=160, end angle=290, radius=0.55]
+        node[below left=-2pt] {$M_1$};
+  \draw[force,->] (7.05,-1.55) arc[start angle=160, end angle=290, radius=0.55]
+        node[below left=-2pt] {$M_2$};
+
+  %% Length dimension
+  \draw[<->,thin] (0,-2.30) -- (7,-2.30)
+        node[fill=white,inner sep=1pt,midway] {$L$};
+  %% x-axis
+  \draw[->,thin] (-0.6,-2.70) -- (8.0,-2.70) node[right] {$x$};
+
+\end{tikzpicture}
+\caption{Two-node Euler-Bernoulli beam element. Transverse displacements $v_1,v_2$
+(blue, upward positive) and rotations $\theta_1,\theta_2$ (blue, CCW positive)
+are the DOFs. End shear forces $V_1,V_2$ and bending moments $M_1,M_2$ (red)
+are the conjugate nodal forces.}
+\label{fig:beam_element}
+\end{figure}
+
+\subsection{Element Kinematics}
+
+The Euler-Bernoulli hypothesis states that the transverse displacement $v(x)$
+completely describes the element state. The curvature and bending moment are:
 \begin{equation}
-    \matr{k}^e_b = \int_0^L EI\, \matr{B}_b\transpose \matr{B}_b \dd x
-    = \frac{EI}{L^3}
+    \kappa(x) = \frac{\dd^2 v}{\dd x^2}, \qquad
+    M(x)      = EI\,\kappa(x) = EI\,\frac{\dd^2 v}{\dd x^2} ,
+    \label{eq:beam_curvature}
+\end{equation}
+and the shear force is $V(x) = \dd M/\dd x = EI\,v'''(x)$.
+The governing strong-form equation for a distributed transverse load $q(x)$
+(positive upward) is:
+\begin{equation}
+    \frac{\dd^2}{\dd x^2}\!\left(EI\,\frac{\dd^2 v}{\dd x^2}\right) = q(x),
+    \qquad 0 < x < L .
+    \label{eq:beam_de}
+\end{equation}
+
+\subsection{Stiffness Matrix from the Unit Displacement Method}
+
+The element has four DOFs:
+$\vect{u}^e = [v_1,\,\theta_1,\,v_2,\,\theta_2]\transpose$,
+where $v_i = v(x_i)$ and $\theta_i = v'(x_i)$.
+The $j$-th column of $\matr{k}^e_b$ gives the nodal forces produced when DOF~$j$
+is set to unity and all others are zero, while the element is in a state of
+pure bending (no distributed load, $q=0$).
+
+For unit displacement $v_1 = 1$ ($\theta_1 = v_2 = \theta_2 = 0$), the
+displacement field is the unique cubic satisfying these four boundary
+conditions:
+\[
+    v(x) = 1 - 3\xi^2 + 2\xi^3, \qquad \xi = x/L .
+\]
+The moment and shear distributions follow from $M = EI v''$ and
+$V = EI v'''$, and the four nodal force components are evaluated at
+$x=0$ and $x=L$. Repeating this procedure for each of the four unit
+DOFs and assembling the results gives the $4\times4$ element stiffness:
+\begin{equation}
+    \matr{k}^e_b = \frac{EI}{L^3}
     \begin{bmatrix}
-         12  &  6L  & -12  &  6L  \\
-         6L  &  4L^2 & -6L  &  2L^2 \\
-        -12  & -6L  &  12  & -6L  \\
-         6L  &  2L^2 & -6L  &  4L^2
+        12  &  6L  & -12  &  6L \\
+        6L  & 4L^2 & -6L  & 2L^2 \\
+       -12  & -6L  &  12  & -6L \\
+        6L  & 2L^2 & -6L  & 4L^2
     \end{bmatrix}
     \label{eq:beam_stiffness}
 \end{equation}
@@ -46,42 +114,875 @@ bending moment $M = EI\kappa$. The element stiffness is:
 \begin{equation*}
     \matr{k}^e_b = \frac{EI}{L^3}
     \begin{bmatrix}
-         12  &  6L  & -12  &  6L  \\
-         6L  &  4L^2 & -6L  &  2L^2 \\
-        -12  & -6L  &  12  & -6L  \\
-         6L  &  2L^2 & -6L  &  4L^2
+        12  &  6L  & -12  &  6L \\
+        6L  & 4L^2 & -6L  & 2L^2 \\
+       -12  & -6L  &  12  & -6L \\
+        6L  & 2L^2 & -6L  & 4L^2
     \end{bmatrix}
 \end{equation*}
 \end{importantbox}
 
-\subsection{Consistent Load Vector (Uniform Load $q$)}
+\subsection{Unit Displacement Interpretation}
 
+The columns of $\matr{k}^e_b$ carry physical meaning analogous to the bar.
+Setting $v_1 = 1$ with $\theta_1 = v_2 = \theta_2 = 0$ requires forces
+$V_1 = 12EI/L^3$ (upward at node~1), $M_1 = 6EI/L^2$ (CCW),
+$V_2 = -12EI/L^3$ (downward at node~2), $M_2 = 6EI/L^2$ (CCW) —
+exactly the first column of $\matr{k}^e_b$.
+
+\begin{remark}
+The beam stiffness matrix is symmetric (Maxwell's reciprocal theorem) and
+singular: a uniform translation $v_1 = v_2 = c$, $\theta_1 = \theta_2 = 0$
+or a rigid rotation produce no curvature and hence no forces. The matrix
+has a two-dimensional null space corresponding to the two rigid-body modes
+of the unconstrained beam element.
+\end{remark}
+
+% =============================================================================
+\section{Displacement Field Approximation}
+\label{sec:beam_displacement}
+% =============================================================================
+
+\subsection{Hermite Shape Functions}
+
+A unique cubic polynomial is determined by four conditions: values and slopes
+at both endpoints. Setting $v(0) = 1$, $v'(0) = 0$, $v(L) = 0$, $v'(L) = 0$
+gives $H_1$; similarly for $H_2$, $H_3$, $H_4$. With $\xi = x/L$:
+\begin{align}
+    H_1(\xi) &= 1 - 3\xi^2 + 2\xi^3 , &
+    H_2(\xi) &= L\bigl(\xi - 2\xi^2 + \xi^3\bigr) , \notag \\
+    H_3(\xi) &= 3\xi^2 - 2\xi^3 , &
+    H_4(\xi) &= L\bigl(-\xi^2 + \xi^3\bigr) .
+    \label{eq:hermite}
+\end{align}
+The displacement field within the element is:
 \begin{equation}
-    \vect{f}^e = \frac{qL}{12}
-    \begin{bmatrix} 6 \\ L \\ 6 \\ -L \end{bmatrix}
-    \label{eq:beam_load}
+    v(x) = H_1 v_1 + H_2 \theta_1 + H_3 v_2 + H_4 \theta_2
+         = \vect{H}(x)\,\vect{u}^e .
+    \label{eq:beam_disp}
 \end{equation}
 
+\begin{remark}
+The Hermite functions satisfy the Kronecker delta property at the nodes
+($H_i(x_j) = \delta_{ij}$ for displacement DOFs, analogously for rotations)
+and ensure $C^1$ continuity: both $v$ and $v' = \theta$ are continuous across
+element boundaries. This is essential for the Euler-Bernoulli beam, whose
+bending energy requires one derivative of $v$ to be square-integrable.
+\end{remark}
+
+\subsection{Curvature-Displacement Matrix}
+
+Differentiating \cref{eq:beam_disp} twice,
+\begin{equation}
+    \kappa(x) = \frac{\dd^2 v}{\dd x^2}
+    = \matr{B}_b(x)\,\vect{u}^e ,
+    \qquad
+    \matr{B}_b = \frac{1}{L^2}
+    \begin{bmatrix}
+        \dfrac{12x}{L} - 6 , &
+        6\dfrac{x}{L} - 4  , &
+        6 - \dfrac{12x}{L} , &
+        6\dfrac{x}{L} - 2
+    \end{bmatrix} .
+    \label{eq:beam_Bb}
+\end{equation}
+The bending moment follows as $M(x) = EI\,\matr{B}_b\,\vect{u}^e$.
+
+\subsection{Enrichment by a Particular Solution}
+
+The Hermite cubic \cref{eq:beam_disp} satisfies the homogeneous beam equation
+($q = 0$) exactly but represents only a linear moment distribution. Under
+a distributed load $q(x) \neq 0$, the exact deflection field includes higher
+polynomial terms that the cubic cannot capture.
+
+Analogous to the bar element enrichment, augment the field with a particular
+solution $v_p(x)$:
+\begin{equation}
+    v(x) = \vect{H}(x)\,\vect{u}^e + v_p(x) ,
+    \label{eq:beam_disp_enriched}
+\end{equation}
+where $v_p(x)$ satisfies the inhomogeneous equation with zero endpoint
+displacements and slopes:
+\begin{equation}
+    EI\,v_p'''' = q(x), \qquad
+    v_p(0) = v_p'(0) = v_p(L) = v_p'(L) = 0 .
+    \label{eq:beam_vp_bvp}
+\end{equation}
+For uniform upward load $q(x) = q_0$, integrating four times and applying the
+four boundary conditions gives:
+\begin{equation}
+    v_p(x) = \frac{q_0}{24EI}\,x^2(L - x)^2 .
+    \label{eq:beam_vp}
+\end{equation}
+One can verify that $EI v_p'''' = q_0$ and all four endpoint conditions are
+satisfied. The enriched field is nodally exact: the FEM solution at the nodes
+is unaffected (since $v_p$ vanishes there), but the interior fields correctly
+represent the quartic deflection under uniform load.
+
+\begin{remark}
+For downward load of intensity $\bar{q} > 0$ (upward-positive convention:
+$q_0 = -\bar{q}$), the particular solution becomes
+$v_p = -\bar{q}\,x^2(L-x)^2 / (24EI) < 0$ (downward deflection).
+\end{remark}
+
+% =============================================================================
+\section{Element Load Vector}
+% =============================================================================
+
+For a distributed transverse load $q(x)$ (upward positive), the consistent
+element load vector is
+\begin{equation}
+    \vect{f}^e = \int_0^L \vect{H}(x)\transpose q(x)\,\dd x .
+    \label{eq:beam_load_integral}
+\end{equation}
+Evaluating for uniform $q(x) = q_0$:
+\begin{align}
+    f^e_1 &= \int_0^L H_1\,q_0\,\dd x = \frac{q_0 L}{2} , &
+    f^e_2 &= \int_0^L H_2\,q_0\,\dd x = \frac{q_0 L^2}{12} , \notag \\
+    f^e_3 &= \int_0^L H_3\,q_0\,\dd x = \frac{q_0 L}{2} , &
+    f^e_4 &= \int_0^L H_4\,q_0\,\dd x = -\frac{q_0 L^2}{12} ,
+\end{align}
+so that
+\begin{equation}
+    \vect{f}^e = \frac{q_0 L}{12}
+    \begin{bmatrix} 6 \\ L \\ 6 \\ -L \end{bmatrix} .
+    \label{eq:beam_load}
+\end{equation}
+For downward load $\bar{q} > 0$, set $q_0 = -\bar{q}$ to obtain equivalent
+downward nodal forces $\mp\bar{q}L/2$ and moments.
+
+% =============================================================================
+\section{Global Assembly}
+\label{sec:beam_assembly}
+% =============================================================================
+
+A beam mesh with $n$ nodes has $2n$ DOFs: $[v_1, \theta_1, v_2, \theta_2,
+\ldots, v_n, \theta_n]$. The global stiffness matrix is assembled exactly as
+for bar elements: each element's $4\times4$ $\matr{k}^e_b$ is added into the
+global matrix at the four DOFs corresponding to nodes $i$ and $j = i+1$.
+For element $e$ connecting nodes $i$ and $i+1$, the DOF mapping is
+\begin{equation}
+    \text{local DOFs}\ [1,2,3,4]
+    \;\longleftrightarrow\;
+    \text{global DOFs}\ [2i-1,\;2i,\;2(i+1)-1,\;2(i+1)] .
+    \label{eq:beam_assembly}
+\end{equation}
+Overlapping entries (shared between adjacent elements) are added, yielding
+the banded symmetric global stiffness $\stiff$.
+
+% =============================================================================
+\section{Boundary Conditions}
+\label{sec:beam_bc}
+% =============================================================================
+
+Essential (kinematic) boundary conditions prescribe specific DOF values:
+
+\begin{description}
+\item[Simply supported / roller:] $v_i = 0$, $\theta_i$ free. No moment
+  resistance; the rotation adjusts freely to equilibrium.
+\item[Clamped (fixed):] $v_i = 0$ and $\theta_i = 0$. Both displacement and
+  rotation are constrained; full moment resistance.
+\item[Free end:] no essential BC imposed. Shear and moment at the free end
+  are natural BCs, automatically satisfied by the variational formulation.
+\end{description}
+
+Essential BCs are applied by striking the rows and columns corresponding to
+prescribed DOFs from the global system, or equivalently by the penalty method:
+add a large stiffness $\alpha \gg \|\stiff\|$ to $K_{ii}$ and set $F_i =
+\alpha\,\bar{u}_i$ for prescribed value $\bar{u}_i$.
+
+% =============================================================================
 \section{Worked Example: Simply Supported Beam}
+% =============================================================================
 
 \begin{example}[Two-element simply supported beam]
 \label{ex:beam2}
 
-A beam with $L = 2$ m, $EI = 10^4$ N$\cdot$m$^2$, simply supported at
-both ends, with central point load $P = 1000$ N.
+A beam with total length $L = 2\ \text{m}$, bending stiffness
+$EI = 10^4\ \text{N\,m}^2$, simply supported at both ends (nodes~1
+and~3), with a central point load $P = 1000\ \text{N}$ downward at
+node~2. Discretize with two equal elements of length $L_e = 1\ \text{m}$.
 
 \medskip
-\noindent Discretize with 2 equal beam elements ($L_e = 1$ m).
+\noindent\textbf{DOF ordering:}
+$[v_1, \theta_1, v_2, \theta_2, v_3, \theta_3] = \text{DOFs}\ [1,2,3,4,5,6]$.
+
 \medskip
+\noindent\textbf{Step 1: Element stiffness matrix.}
 
-\noindent\textbf{DOFs:} node 1: $(v_1, \theta_1)$, node 2: $(v_2, \theta_2)$,
-node 3: $(v_3, \theta_3)$.
+Both elements are identical ($L_e = 1\ \text{m}$). With
+$K_0 = EI/L_e^3 = 10^4\ \text{N/m}$:
+\[
+    \matr{k}^e_b = K_0
+    \begin{bmatrix}
+        12 &  6 & -12 &  6 \\
+         6 &  4 &  -6 &  2 \\
+       -12 & -6 &  12 & -6 \\
+         6 &  2 &  -6 &  4
+    \end{bmatrix}
+    \begin{bmatrix}
+        \text{N/m} \\ \text{N} \\ \text{N/m} \\ \text{N}
+    \end{bmatrix}
+    \;(\text{and N\,m for moment rows/cols}) .
+\]
 
-\noindent\textbf{BCs:} $v_1 = 0$, $v_3 = 0$ (pin supports).
+\medskip
+\noindent\textbf{Step 2: Global assembly.}
 
-\noindent\textbf{Free DOFs:} $[\theta_1, v_2, \theta_2, \theta_3]$.
+Element~1 occupies DOFs $[1,2,3,4]$; element~2 occupies $[3,4,5,6]$.
+The $6\times 6$ global stiffness (divided by $K_0$):
+\begin{equation*}
+    \frac{\stiff}{K_0} =
+    \begin{bmatrix}
+        12  &  6  & -12 &   6 &   0 &   0 \\
+         6  &  4  &  -6 &   2 &   0 &   0 \\
+       -12  & -6  &  24 &   0 & -12 &   6 \\
+         6  &  2  &   0 &   8 &  -6 &   2 \\
+         0  &  0  & -12 &  -6 &  12 &  -6 \\
+         0  &  0  &   6 &   2 &  -6 &   4
+    \end{bmatrix} .
+\end{equation*}
+Note the overlapping entries at DOFs~3 and~4: $K_{33} = 12+12 = 24K_0$ and
+$K_{34} = -6+6 = 0$.
 
-\noindent\textbf{Analytical mid-span:} $v_2 = PL^3/(48EI) = 8.33 \times 10^{-4}$ m.
+\medskip
+\noindent\textbf{Step 3: Load vector and boundary conditions.}
 
-\noindent See \Cref{lst:beam2d} in the Appendix for the MATLAB implementation.
+Applied loads: $F_3 = -P = -1000\ \text{N}$ (downward at DOF~3), all
+other loads zero.
+Essential BCs: $v_1 = 0$ (DOF~1) and $v_3 = 0$ (DOF~5). Free DOFs:
+$[\theta_1, v_2, \theta_2, \theta_3]$ = DOFs $[2, 3, 4, 6]$.
+
+The reduced $4\times4$ system:
+\begin{equation}
+    K_0
+    \begin{bmatrix} 4 & -6 &  2 &  0 \\
+                   -6 & 24 &  0 &  6 \\
+                    2 &  0 &  8 &  2 \\
+                    0 &  6 &  2 &  4 \end{bmatrix}
+    \begin{bmatrix} \theta_1 \\ v_2 \\ \theta_2 \\ \theta_3 \end{bmatrix}
+    =
+    \begin{bmatrix} 0 \\ -P \\ 0 \\ 0 \end{bmatrix} .
+    \label{eq:beam2_reduced}
+\end{equation}
+
+\medskip
+\noindent\textbf{Step 4: Solution (MATLAB-verified, \Cref{lst:beam_simple}).}
+
+\begin{align*}
+    \theta_1 &= -0.025\ \text{rad}, &
+    v_2      &= -16.67\ \text{mm} \quad (\text{downward}), \\
+    \theta_2 &= 0\ \text{rad},    &
+    \theta_3 &= +0.025\ \text{rad}.
+\end{align*}
+By symmetry, $\theta_2 = 0$ exactly. The FEM result is nodally exact
+because the loading is a concentrated nodal force:
+\[
+    |v_2| = \frac{PL^3}{48EI}
+          = \frac{1000 \times 2^3}{48 \times 10^4}
+          = 0.01667\ \text{m}
+          = \mathbf{16.67\ \text{mm}} .
+\]
+
+\medskip
+\noindent\textbf{Step 5: Reactions and moment diagram.}
+
+The support reactions follow from $\stiff\,\vect{u} = \vect{F}_{\mathrm{ext}}$:
+\[
+    R_1 = R_3 = 500\ \text{N} \quad
+    (\textstyle\sum F = 500 + 500 - 1000 = 0\ \checkmark).
+\]
+The maximum bending moment occurs at midspan (node~2):
+\[
+    M_{\max} = \frac{PL}{4} = \frac{1000 \times 2}{4} = 500\ \text{N\,m}
+    \quad (\text{sagging}) .
+\]
+The MATLAB script \Cref{lst:beam_simple} plots the deflection and moment
+diagram (\cref{fig:beam_simple_results}).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/beam_simple_results}
+\caption{Two-element simply supported beam: deflection (top, downward
+displacement plotted positive) and bending moment diagram (bottom).
+Maximum deflection $|v_2| = 16.67\ \text{mm}$; $M_{\max} = 500\ \text{N\,m}$.}
+\label{fig:beam_simple_results}
+\end{figure}
+
 \end{example}
+
+% =============================================================================
+\section{Worked Example: Three-Span Continuous Beam}
+% =============================================================================
+
+\begin{example}[Three-element continuous beam with mixed loading]
+\label{ex:beam_continuous}
+
+A continuous beam with $E = 210{,}000\ \text{N/mm}^2$ and I-section
+moment of inertia $I = 5{,}481{,}140\ \text{mm}^4$ ($z_{\max} = 70\ \text{mm}$)
+is discretized with three elements, as shown in \cref{fig:beam_continuous}.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>=Stealth, x=0.52mm, y=1cm,
+    force/.style={->,ultra thick,red!75!black},
+    disp/.style={->,thick,blue!70!black}]
+
+  %% Beam
+  \fill[gray!22] (0,-0.18) rectangle (6000,0.18);
+  \draw[thick] (0,-0.18) rectangle (6000,0.18);
+
+  %% Distributed load on element 1 (0 to 3000)
+  \foreach \xp in {100,300,...,2900}{
+    \draw[disp,->,thin] (\xp, 0.9) -- (\xp, 0.22);
+  }
+  \draw[disp,thick] (0,0.9) -- (3000,0.9);
+  \node[above=2pt,blue!70!black] at (1500,0.9) {$q = 10\ \text{N/mm}$};
+
+  %% Concentrated load at node 3 (x=5000)
+  \draw[force] (5000, 1.50) -- (5000, 0.22)
+       node[right=3pt,midway] {$P = 30\ \text{kN}$};
+
+  %% Supports
+  % Node 1: pin
+  \draw[fill=gray!25,thick] (0,0) -- (-200,-0.45) -- (200,-0.45) -- cycle;
+  \fill[pattern=north east lines,pattern color=gray!70]
+       (-240,-0.45) rectangle (240,-0.65);
+  \draw[thick] (-240,-0.45) -- (240,-0.45);
+
+  % Node 2: roller
+  \draw[fill=gray!25,thick] (3000,0) -- (2800,-0.45) -- (3200,-0.45) -- cycle;
+  \fill[pattern=north east lines,pattern color=gray!70]
+       (2760,-0.45) rectangle (3240,-0.65);
+  \draw[thick] (2760,-0.45) -- (3240,-0.45);
+
+  % Node 4: roller
+  \draw[fill=gray!25,thick] (6000,0) -- (5800,-0.45) -- (6200,-0.45) -- cycle;
+  \fill[pattern=north east lines,pattern color=gray!70]
+       (5760,-0.45) rectangle (6240,-0.65);
+  \draw[thick] (5760,-0.45) -- (6240,-0.45);
+
+  %% Node dots and labels
+  \filldraw (0,0)    circle (2.5pt) node[above right=2pt] {\small\bfseries 1};
+  \filldraw (3000,0) circle (2.5pt) node[above right=2pt] {\small\bfseries 2};
+  \filldraw (5000,0) circle (2.5pt) node[above right=2pt] {\small\bfseries 3};
+  \filldraw (6000,0) circle (2.5pt) node[above right=2pt] {\small\bfseries 4};
+
+  %% Element numbers
+  \node at (1500,-0.50) {\small\bfseries\textcircled{\small 1}};
+  \node at (4000,-0.50) {\small\bfseries\textcircled{\small 2}};
+  \node at (5500,-0.50) {\small\bfseries\textcircled{\small 3}};
+
+  %% Dimensions
+  \draw[<->,thin] (0,-0.90) -- (3000,-0.90)
+        node[fill=white,inner sep=1pt,midway] {\small $3000\ \text{mm}$};
+  \draw[<->,thin] (3000,-0.90) -- (5000,-0.90)
+        node[fill=white,inner sep=1pt,midway] {\small $2000$};
+  \draw[<->,thin] (5000,-0.90) -- (6000,-0.90)
+        node[fill=white,inner sep=1pt,midway] {\small $1000$};
+
+\end{tikzpicture}
+\caption{Three-element continuous beam. Distributed load $q=10\ \text{N/mm}$
+on element~1; concentrated load $P=30\ \text{kN}$ at node~3. Pin support at
+node~1; rollers at nodes~2 and~4.}
+\label{fig:beam_continuous}
+\end{figure}
+
+\noindent\textbf{Problem data:}
+\begin{align*}
+    EI &= 210{,}000 \times 5{,}481{,}140 = 1.1510 \times 10^{12}\ \text{N\,mm}^2 \\
+    L_1 &= 3000\ \text{mm},\quad L_2 = 2000\ \text{mm},\quad L_3 = 1000\ \text{mm}
+\end{align*}
+
+\noindent\textbf{DOF map:}
+$[w_1,\beta_1,w_2,\beta_2,w_3,\beta_3,w_4,\beta_4] = \text{DOFs}\ [1\ldots8]$.\\
+Fixed DOFs: $\{1,3,7\}$ ($w_1=w_2=w_4=0$); free DOFs: $\{2,4,5,6,8\}$.
+
+\medskip
+\noindent\textbf{Step 1: Element stiffness constants.}
+
+\begin{equation*}
+    K_1 = \frac{EI}{L_1^3} = 42.63\ \frac{\text{N}}{\text{mm}}, \quad
+    K_2 = \frac{EI}{L_2^3} = 143.88\ \frac{\text{N}}{\text{mm}}, \quad
+    K_3 = \frac{EI}{L_3^3} = 1151.0\ \frac{\text{N}}{\text{mm}} .
+\end{equation*}
+
+Each element stiffness matrix uses the pattern of \cref{eq:beam_stiffness}
+with its own $K_i$ and $L_i$. The dominant off-diagonal entries for
+element~1 are:
+\[
+    k^{(1)}_{12} = K_1 \cdot 6L_1 = 42.63 \times 18{,}000 = 767{,}340\ \text{N} ,
+    \qquad
+    k^{(1)}_{22} = K_1 \cdot 4L_1^2 = 42.63 \times 36 \times 10^6
+                 = 1.535 \times 10^9\ \text{N\,mm} .
+\]
+
+\medskip
+\noindent\textbf{Step 2: Load vectors.}
+
+Distributed load $\bar{q} = 10\ \text{N/mm}$ (downward) on element~1 only
+($q_0 = -\bar{q} = -10\ \text{N/mm}$):
+\begin{equation*}
+    \vect{f}^{(1)}_q = \frac{q_0 L_1}{12}
+    \begin{bmatrix} 6 \\ L_1 \\ 6 \\ -L_1 \end{bmatrix}
+    = \frac{-10 \times 3000}{12}
+    \begin{bmatrix} 6 \\ 3000 \\ 6 \\ -3000 \end{bmatrix}
+    =
+    \begin{bmatrix} -15{,}000 \\ -7.5 \times 10^6 \\ -15{,}000 \\ +7.5 \times 10^6
+    \end{bmatrix}
+    \begin{bmatrix} \text{N} \\ \text{N\,mm} \\ \text{N} \\ \text{N\,mm} \end{bmatrix}
+    \quad\text{(DOFs 1,2,3,4)} .
+\end{equation*}
+Elements~2 and~3 carry no distributed load. The concentrated load
+$P = 30{,}000\ \text{N}$ (downward) acts at DOF~5:
+\[
+    F_5 = -30{,}000\ \text{N} .
+\]
+The global load vector (non-zero entries only):
+\begin{align*}
+    F_1 &= -15{,}000\ \text{N}, &
+    F_2 &= -7.5 \times 10^6\ \text{N\,mm}, \\
+    F_3 &= -15{,}000\ \text{N}, &
+    F_4 &= +7.5 \times 10^6\ \text{N\,mm}, \\
+    F_5 &= -30{,}000\ \text{N}.
+\end{align*}
+
+\medskip
+\noindent\textbf{Step 3: Reduced system.}
+
+Retaining only free DOFs $\{2,4,5,6,8\}$, the $5\times5$ reduced stiffness
+matrix is (all entries $\times 10^{-9}$ N$^{-1}$mm$^{-1}$ for rotation DOFs,
+or as listed by MATLAB):
+\begin{equation}
+    10^9 \times \matr{K}_{ff} =
+    \begin{bmatrix}
+        1534.7 & 767.4  & 0       & 0       & 0      \\
+        767.4  & 3836.8 & -1.7    & 1151.0  & 0      \\
+        0      & -1.7   & 0.0052  & 5.2     & 6.9    \\
+        0      & 1151.0 & 5.2     & 6906.2  & 2302.1 \\
+        0      & 0      & 6.9     & 2302.1  & 4604.2
+    \end{bmatrix}\ \text{N/mm or N or N\,mm}
+    \label{eq:beam_cont_kff}
+\end{equation}
+with load vector
+$\vect{F}_{ff} = [-7.5\times10^6,\; 7.5\times10^6,\; -30{,}000,\; 0,\; 0]^T$.
+
+\medskip
+\noindent\textbf{Step 4: Solution (MATLAB-verified, \Cref{lst:beam_3elem}).}
+
+\begin{align*}
+    \beta_1 &= -4.434 \times 10^{-3}\ \text{rad}, &
+    \beta_2 &= -9.050 \times 10^{-4}\ \text{rad}, \\
+    w_3     &= -6.838\ \text{mm} \quad (\text{downward}), &
+    \beta_3 &= +2.232 \times 10^{-3}\ \text{rad}, \\
+    \beta_4 &= +9.140 \times 10^{-3}\ \text{rad}.
+\end{align*}
+All other DOFs are zero (prescribed supports).
+
+\medskip
+\noindent\textbf{Step 5: Support reactions.}
+
+\begin{align*}
+    R_1 &= +10{,}900\ \text{N}, &
+    R_2 &= +33{,}190\ \text{N}, &
+    R_4 &= +15{,}900\ \text{N}.
+\end{align*}
+Equilibrium check:
+$\sum F = 10{,}900 + 33{,}190 + 15{,}900 - 10 \times 3000 - 30{,}000
+= 60{,}000 - 60{,}000 = 0\ \checkmark$.
+
+\medskip
+\noindent\textbf{Step 6: Internal fields and cross-section stress.}
+
+Using Hermite interpolation with particular solution enrichment on element~1,
+the displacement, slope, bending moment ($M = EI v''$, sagging positive),
+and shear force ($V = EI v'''$) are computed element-by-element and plotted
+in \cref{fig:beam_continuous_results}.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.82\textwidth]{figures/beam_continuous_results}
+\caption{Continuous beam internal fields. Top to bottom: deflection
+(downward positive), slope, bending moment (sagging positive), shear force.
+Key values: $w_3 = 6.84\ \text{mm}$ (downward), $M_{\max} = +15.90\ \text{kN\,m}$
+(sagging at node~3), $M_{\min} = -12.29\ \text{kN\,m}$ (hogging at node~2).}
+\label{fig:beam_continuous_results}
+\end{figure}
+
+The maximum bending moment magnitude is
+$|M|_{\max} = 15.90 \times 10^6\ \text{N\,mm}$ at $x = 5000\ \text{mm}$.
+The maximum normal bending stress:
+\begin{equation}
+    \sigma_{\max} = \frac{|M|_{\max}\,z_{\max}}{I_y}
+    = \frac{15.90 \times 10^6 \times 70}{5{,}481{,}140}
+    = \mathbf{203.1\ \text{MPa}} .
+    \label{eq:beam_sigma_max}
+\end{equation}
+
+\end{example}
+
+% =============================================================================
+\section{Principle of Virtual Work for the Beam}
+\label{sec:beam_pvw}
+% =============================================================================
+
+\subsection{Statement of the Principle}
+
+\begin{importantbox}
+\textbf{Principle of Virtual Work for the Beam:}
+For a beam in static equilibrium, and for any \emph{kinematically admissible}
+virtual displacement field $\delta v(x)$ (continuous with continuous slope,
+and $\delta v = \delta v' = 0$ wherever $v$ or $v'$ is prescribed):
+\begin{equation}
+    \delta W_{\mathrm{int}} = \delta W_{\mathrm{ext}} ,
+    \label{eq:beam_pvw_statement}
+\end{equation}
+with
+\[
+    \delta W_{\mathrm{int}}
+    = \int_0^L M(x)\,\delta\kappa(x)\,\dd x
+    = \int_0^L EI\,\frac{\dd^2 v}{\dd x^2}\,\frac{\dd^2 \delta v}{\dd x^2}\,\dd x ,
+\]
+\[
+    \delta W_{\mathrm{ext}}
+    = \int_0^L q(x)\,\delta v\,\dd x
+    + \sum_i F_i\,\delta v(x_i)
+    + \sum_j M_j\,\delta v'(x_j) .
+\]
+\end{importantbox}
+
+\subsection{Derivation from Equilibrium}
+
+Starting from the strong form \cref{eq:beam_de}, multiply by an arbitrary
+virtual displacement $\delta v(x)$ and integrate:
+\[
+    \int_0^L \bigl(EI\,v''\bigr)''\delta v\,\dd x = \int_0^L q\,\delta v\,\dd x .
+\]
+Integration by parts once (on the left):
+\begin{equation}
+    \int_0^L \bigl(EI\,v''\bigr)'\delta v\,\dd x
+    = \bigl[(EI\,v'')'\ \delta v\bigr]_0^L
+      - \int_0^L \bigl(EI\,v''\bigr)'\,\delta v'\,\dd x .
+    \label{eq:beam_pvw_ibp1}
+\end{equation}
+Integration by parts a second time (on the remaining integral):
+\begin{equation}
+    \int_0^L \bigl(EI\,v''\bigr)'\,\delta v'\,\dd x
+    = \bigl[EI\,v''\,\delta v'\bigr]_0^L
+      - \int_0^L EI\,v''\,\delta v''\,\dd x .
+    \label{eq:beam_pvw_ibp2}
+\end{equation}
+Combining and rearranging:
+\begin{equation}
+    \int_0^L EI\,v''\,\delta v''\,\dd x
+    = \int_0^L q\,\delta v\,\dd x
+    + \bigl[(EI\,v'')'\,\delta v\bigr]_0^L
+    - \bigl[EI\,v''\,\delta v'\bigr]_0^L .
+    \label{eq:beam_pvw_final}
+\end{equation}
+The boundary terms yield the natural boundary conditions: $V = (EIv'')'$
+(shear) at a transverse-free end contributes to $\delta W_{\mathrm{ext}}$ via
+$V\,\delta v$, and $M = EI v''$ (moment) at a rotationally-free end via
+$M\,\delta v'$. At nodes where displacements or rotations are prescribed,
+admissibility forces $\delta v = 0$ or $\delta v' = 0$, respectively,
+so those boundary terms vanish. This recovers \cref{eq:beam_pvw_statement}
+exactly.
+
+\begin{remark}
+Equation~\cref{eq:beam_pvw_final} is the \emph{weak form} of the beam
+equation. The strong form \cref{eq:beam_de} requires $v$ to be
+four-times differentiable; the weak form requires only that $v''$ and
+$\delta v''$ are square-integrable. Hermite cubic shape functions satisfy
+this requirement with their $C^1$ continuity, making them the natural
+choice for beam finite elements.
+\end{remark}
+
+\subsection{Recovery of the Beam Stiffness Matrix}
+
+Substitute the Hermite interpolation $v = \vect{H}\,\vect{u}^e$,
+$\delta v = \vect{H}\,\delta\vect{u}^e$, $v'' = \matr{B}_b\,\vect{u}^e$
+into the left-hand side of \cref{eq:beam_pvw_final}:
+\[
+    \delta\vect{u}^{e\transpose}
+    \!\left[\int_0^L EI\,\matr{B}_b\transpose\matr{B}_b\,\dd x\right]
+    \!\vect{u}^e
+    = \delta\vect{u}^{e\transpose}\,\matr{k}^e_b\,\vect{u}^e ,
+\]
+giving:
+\begin{equation}
+    \matr{k}^e_b = \int_0^L EI\,\matr{B}_b\transpose\matr{B}_b\,\dd x
+    = \frac{EI}{L^3}
+    \begin{bmatrix}
+        12  &  6L  & -12  &  6L \\
+        6L  & 4L^2 & -6L  & 2L^2 \\
+       -12  & -6L  &  12  & -6L \\
+        6L  & 2L^2 & -6L  & 4L^2
+    \end{bmatrix} ,
+    \label{eq:beam_pvw_ke}
+\end{equation}
+identical to \cref{eq:beam_stiffness}. The right-hand side of
+\cref{eq:beam_pvw_final} produces $\vect{f}^e = \int_0^L \vect{H}\transpose q\,\dd x$,
+recovering \cref{eq:beam_load}.
+
+% =============================================================================
+\section{Galerkin Finite Element Formulation of the Beam}
+\label{sec:beam_galerkin}
+% =============================================================================
+
+\begin{remark}
+\Cref{ch:weighted_residuals} applied the Galerkin method with a single
+global polynomial to the axially loaded bar. The formulation here uses the
+Hermite shape functions $H_1$--$H_4$ as both trial and test functions on
+each element — the standard Bubnov--Galerkin approach for the beam.
+\end{remark}
+
+\subsection{Weighted Residual Statement}
+
+Substitute the Hermite trial $v^h = \vect{H}\,\vect{u}^e$ into the strong
+form residual:
+\begin{equation}
+    R(x) = \bigl(EI\,v^{h\prime\prime}\bigr)'' - q(x) .
+    \label{eq:beam_galerkin_residual}
+\end{equation}
+Since the Hermite cubics have zero fourth derivative, $v^{h\prime\prime\prime\prime} = 0$,
+so $R = -q(x)$ — the same situation as for the bar. The Galerkin statement
+requires the residual to be orthogonal to each test (shape) function:
+\begin{equation}
+    \int_0^L H_i(x)\,R(x)\,\dd x = 0, \qquad i = 1,2,3,4 .
+    \label{eq:beam_galerkin_statement}
+\end{equation}
+
+\subsection{Integration by Parts to the Weak Form}
+
+Substituting $R = (EI v^{h\prime\prime})'' - q$ and integrating by parts
+twice (identical to \cref{eq:beam_pvw_ibp1,eq:beam_pvw_ibp2}):
+\begin{equation}
+    \int_0^L EI\,H_i''\,v^{h\prime\prime}\,\dd x
+    = \int_0^L H_i\,q\,\dd x + F_i^{\mathrm{natural}} ,
+    \label{eq:beam_galerkin_weak_i}
+\end{equation}
+where $F_i^{\mathrm{natural}}$ collects the shear/moment boundary terms.
+Writing all four rows simultaneously:
+\begin{equation}
+    \underbrace{\left[\int_0^L EI\,\matr{B}_b\transpose\matr{B}_b\,\dd x\right]}_{\matr{k}^e_b}
+    \!\vect{u}^e
+    = \underbrace{\int_0^L \vect{H}\transpose q\,\dd x}_{\vect{f}^e} .
+    \label{eq:beam_galerkin_system}
+\end{equation}
+
+\begin{importantbox}
+The Galerkin FE formulation yields the same element matrices as direct
+derivation:
+\[
+    \matr{k}^e_b = \int_0^L EI\,\matr{B}_b\transpose\matr{B}_b\,\dd x
+    = \frac{EI}{L^3}\begin{bmatrix}
+        12 & 6L & -12 & 6L \\ 6L & 4L^2 & -6L & 2L^2 \\
+       -12 & -6L & 12 & -6L \\ 6L & 2L^2 & -6L & 4L^2
+    \end{bmatrix} ,
+    \quad
+    \vect{f}^e = \int_0^L \vect{H}\transpose q\,\dd x
+    = \frac{q_0 L}{12}\begin{bmatrix}6\\L\\6\\-L\end{bmatrix} .
+\]
+\end{importantbox}
+
+% =============================================================================
+\section{Equivalence of Galerkin and Virtual Work Formulations}
+\label{sec:beam_galerkin_pvw}
+% =============================================================================
+
+The Galerkin weak form \cref{eq:beam_galerkin_weak_i} and the PVW equation
+\cref{eq:beam_pvw_final} are identical statements. Setting $w_i = \delta v$:
+\begin{align}
+    \text{PVW:}\quad
+    &\int_0^L EI\,\frac{\dd^2 v}{\dd x^2}\,\frac{\dd^2 \delta v}{\dd x^2}\,\dd x
+     = \int_0^L q\,\delta v\,\dd x + \sum_i F_i\,\delta v(x_i), \notag \\[4pt]
+    \text{Galerkin:}\quad
+    &\int_0^L EI\,v^{h\prime\prime}\,w_i''\,\dd x
+     = \int_0^L q\,w_i\,\dd x + F_i^{\mathrm{natural}} .
+    \label{eq:beam_galerkin_pvw_comparison}
+\end{align}
+Under $w_i = \delta v$ the two are identical: both enforce the same integral
+condition over every kinematically admissible test field.
+
+\begin{remark}
+An important distinction for beams: the test functions $w_i = H_i$ and the
+virtual displacements $\delta v$ must be $C^1$ (continuous with continuous
+slope), because the weak form involves $w_i''$. This is more demanding than
+for bar elements ($C^0$ suffices) and is why Hermite cubics — rather than
+linear Lagrange polynomials — are required. The Galerkin method's mandate to
+choose test functions from the same space as the trial directly prescribes
+this continuity requirement.
+\end{remark}
+
+% =============================================================================
+\section{Principle of Minimum Potential Energy}
+\label{sec:beam_pmpe}
+% =============================================================================
+
+\subsection{Total Potential Energy of the Beam}
+
+\begin{definition}
+The \textbf{bending strain energy} of a linearly elastic beam is
+\begin{equation}
+    U = \frac{1}{2}\int_0^L EI\!\left(\frac{\dd^2 v}{\dd x^2}\right)^{\!2}\dd x .
+    \label{eq:beam_pmpe_strain_energy}
+\end{equation}
+The \textbf{total potential energy} is
+\begin{equation}
+    \Pi[v] = U - W_{\mathrm{ext}},
+    \qquad
+    W_{\mathrm{ext}} = \int_0^L q\,v\,\dd x + \sum_i F_i\,v(x_i)
+                                               + \sum_j M_j\,v'(x_j) .
+    \label{eq:beam_pmpe_tpe}
+\end{equation}
+\end{definition}
+
+\subsection{Stationarity Condition and the Weak Form}
+\label{sec:beam_pmpe_stationarity}
+
+\begin{importantbox}
+\textbf{Principle of Minimum Potential Energy (PMPE):} Of all kinematically
+admissible displacement fields, the one satisfying equilibrium makes $\Pi$
+stationary:
+\begin{equation}
+    \delta\Pi = 0
+\end{equation}
+for every admissible variation $\delta v$. For a stable elastic equilibrium,
+$\Pi$ is a global minimum.
+\end{importantbox}
+
+Taking the first variation of \cref{eq:beam_pmpe_tpe}:
+\begin{equation}
+    \delta\Pi
+    = \int_0^L EI\,v''\,\delta v''\,\dd x
+      - \int_0^L q\,\delta v\,\dd x
+      - \sum_i F_i\,\delta v(x_i) - \sum_j M_j\,\delta v'(x_j)
+      = 0 .
+    \label{eq:beam_pmpe_first_variation}
+\end{equation}
+Identifying $\delta W_{\mathrm{int}} = \int EI v'' \delta v''\,\dd x$ and
+$\delta W_{\mathrm{ext}}$ from the remaining terms, this is precisely the
+PVW statement \cref{eq:beam_pvw_statement}:
+\begin{equation}
+    \delta\Pi = 0
+    \;\Longleftrightarrow\;
+    \delta W_{\mathrm{int}} = \delta W_{\mathrm{ext}} .
+    \label{eq:beam_pmpe_pvw_link}
+\end{equation}
+
+\begin{remark}
+PMPE is a special case of PVW for conservative (elastic) systems. Both
+principles are equivalent for the Euler-Bernoulli beam with fixed applied
+loads. PMPE provides the variational foundation that guarantees PVW holds;
+PVW generalizes to non-conservative systems (e.g.\ aerodynamic follower
+loads) where no potential energy functional exists.
+\end{remark}
+
+\subsection{Element Stiffness Matrix and Load Vector from PMPE}
+\label{sec:beam_pmpe_matrices}
+
+Substitute $v = \vect{H}\,\vect{u}^e$, $v'' = \matr{B}_b\,\vect{u}^e$
+into the element bending energy:
+\[
+    U^e = \frac{1}{2}\int_0^L EI\,\vect{u}^{e\transpose}
+          \matr{B}_b\transpose\matr{B}_b\,\vect{u}^e\,\dd x
+        = \frac{1}{2}\,\vect{u}^{e\transpose}
+          \!\underbrace{\left[\int_0^L EI\,\matr{B}_b\transpose\matr{B}_b\,\dd x\right]}_{\matr{k}^e_b}
+          \!\vect{u}^e .
+\]
+The external work term gives $W^e_{\mathrm{ext}} = \vect{u}^{e\transpose}\vect{f}^e$,
+so the element potential energy is the quadratic:
+\begin{equation}
+    \Pi^e = \frac{1}{2}\,\vect{u}^{e\transpose}\matr{k}^e_b\,\vect{u}^e
+            - \vect{u}^{e\transpose}\vect{f}^e .
+    \label{eq:beam_pmpe_tpe_element}
+\end{equation}
+Stationarity $\partial\Pi^e/\partial\vect{u}^e = \vect{0}$ gives
+$\matr{k}^e_b\,\vect{u}^e = \vect{f}^e$, recovering \cref{eq:beam_stiffness}
+and \cref{eq:beam_load}.
+
+\begin{importantbox}
+Minimizing the element potential energy yields the stiffness matrix:
+\[
+    \matr{k}^e_b
+    = \int_0^L EI\,\matr{B}_b\transpose\matr{B}_b\,\dd x
+    = \frac{EI}{L^3}
+    \begin{bmatrix}
+        12 & 6L & -12 & 6L \\ 6L & 4L^2 & -6L & 2L^2 \\
+       -12 & -6L & 12 & -6L \\ 6L & 2L^2 & -6L & 4L^2
+    \end{bmatrix} .
+\]
+The stiffness matrix is the Hessian of the bending strain energy with
+respect to the nodal DOFs.
+\end{importantbox}
+
+\subsection{Summary: Four Equivalent Paths to the Beam Element Matrices}
+\label{sec:beam_pmpe_summary}
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Four derivation paths for the Euler-Bernoulli beam element matrices.}
+\label{tab:beam_four_methods}
+\begin{tabular}{@{}lp{2.8cm}p{3.8cm}p{3.4cm}@{}}
+\toprule
+\textbf{Method} & \textbf{Starting point}
+  & \textbf{Path to $\matr{k}^e_b$}
+  & \textbf{Load vector $\vect{f}^e$} \\
+\midrule
+Direct Formulation
+  & $M = EIv''$;\newline unit displacements
+  & Four unit BVPs; nodal forces from $M$ and $V$
+  & Particular solution enrichment (\cref{sec:beam_displacement}) \\[6pt]
+PVW
+  & $\delta W_{\mathrm{int}} = \delta W_{\mathrm{ext}}$ (\cref{eq:beam_pvw_statement})
+  & Sub.\ $v = \vect{H}\vect{u}^e$, $\delta v = \vect{H}\delta\vect{u}^e$ into weak form
+  & RHS of weak form (\cref{sec:beam_pvw}) \\[6pt]
+Galerkin FE
+  & $\int H_i R\,\dd x = 0$,\newline $w_i = H_i$ (\cref{eq:beam_galerkin_statement})
+  & IBP twice $+$ $\matr{B}_b$-matrix (\cref{sec:beam_galerkin})
+  & RHS of weak form (\cref{eq:beam_galerkin_system}) \\[6pt]
+PMPE
+  & $\delta\Pi = 0$, $\Pi = U - W_{\mathrm{ext}}$ (\cref{eq:beam_pmpe_tpe})
+  & Sub.\ FE trial into $U^e$;\newline stationarity
+  & $\partial W_{\mathrm{ext}}^e/\partial\vect{u}^e$ (\cref{sec:beam_pmpe_matrices}) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All four paths produce \cref{eq:beam_stiffness} and \cref{eq:beam_load}.
+PVW and Galerkin extend unchanged to frame, plate, and shell elements;
+PMPE extends to any conservative elastic system. The four-path convergence
+for the bar element is documented in \cref{tab:four_methods}.
+
+% =============================================================================
+\section{Natural Coordinates for the Beam Element}
+\label{sec:beam_natural}
+% =============================================================================
+
+For generality and numerical integration, map $x \in [0, L]$ to
+$\xi \in [0, 1]$ via $x = \xi L$, $\dd x = L\,\dd\xi$. The Hermite functions
+in natural coordinates are:
+\begin{align}
+    \tilde{H}_1(\xi) &= 1 - 3\xi^2 + 2\xi^3 , &
+    \tilde{H}_2(\xi) &= \xi - 2\xi^2 + \xi^3 , \notag \\
+    \tilde{H}_3(\xi) &= 3\xi^2 - 2\xi^3 , &
+    \tilde{H}_4(\xi) &= -\xi^2 + \xi^3 ,
+    \label{eq:beam_hermite_natural}
+\end{align}
+so that $H_1(x) = \tilde{H}_1(\xi)$ and $H_2(x) = L\tilde{H}_2(\xi)$, etc.
+
+The second derivative transforms via the chain rule:
+$\dd^2 v/\dd x^2 = (1/L^2)\,\dd^2 v/\dd \xi^2$.
+The stiffness integral in natural coordinates becomes:
+\begin{equation}
+    \matr{k}^e_b = \int_0^1 EI\,\tilde{\matr{B}}_b(\xi)\transpose
+                  \tilde{\matr{B}}_b(\xi)\,\frac{\dd\xi}{L^3} ,
+    \label{eq:beam_isomap}
+\end{equation}
+where $\tilde{\matr{B}}_b = (1/L^2)[d^2\tilde{H}_i/d\xi^2]$ collects the
+curvature shape derivatives. Since $\tilde{H}_i$ are cubic polynomials,
+$\tilde{\matr{B}}_b\transpose \tilde{\matr{B}}_b$ is a polynomial of degree~2
+in $\xi$; a 2-point Gauss--Legendre quadrature (mapped to $[0,1]$) integrates
+it exactly. This is the foundation for numerical integration of beam and frame
+elements with variable $EI(x)$.

@@ -345,61 +345,101 @@ exportgraphics(gcf,'../figures/truss2d_deformed.png','Resolution',300);
 \end{lstlisting}
 
 % ---------------------------------------------------------------
-\section{2D Beam Element}
-\label{lst:beam2d}
+\section{Euler-Bernoulli Beam: Simply Supported}
+\label{lst:beam_simple}
 
-\begin{lstlisting}[caption={Simply supported beam with central load (Chapter~\ref{ch:beam})},
-                   label={code:beam2d}]
-% fem_beam_2d.m -- 2-element Euler-Bernoulli beam
-% Example from Chapter 3
+\begin{lstlisting}[caption={Two-element simply supported beam (Chapter~\ref{ch:beam})},
+                   label={code:beam_simple}]
+% fem_beam_simple.m -- Chapter 5: 2-element simply supported beam
+% L = 2 m, EI = 1e4 N*m^2, P = 1000 N downward at midspan
+% Sign convention: v upward positive, theta CCW positive
+clear; clc; close all;
 
-clear; clc;
+L = 2; Le = L/2; EI = 1e4; P = 1000;
+nNodes = 3; nDOF = 6;
+K0 = EI / Le^3;  % = 1e4 N/m
 
-%% Parameters
-nElem = 2;
-nNode = nElem + 1;
-L_total = 2.0;          % total beam length [m]
-EI      = 1e4;          % bending stiffness [N*m^2]
-P       = 1000;         % central point load [N]
-Le      = L_total / nElem;
+Ce = [12   6*Le   -12   6*Le;
+      6*Le 4*Le^2 -6*Le 2*Le^2;
+     -12  -6*Le    12  -6*Le;
+      6*Le 2*Le^2 -6*Le 4*Le^2];
+ke = K0 * Ce;
 
-%% Beam element stiffness (4 DOF: v1,th1,v2,th2)
-ke = (EI/Le^3) * [12,   6*Le,  -12,   6*Le;
-                   6*Le, 4*Le^2, -6*Le, 2*Le^2;
-                  -12,  -6*Le,   12,  -6*Le;
-                   6*Le, 2*Le^2, -6*Le, 4*Le^2];
-
-%% DOFs: each node has [v, theta]
-nDOF = 2 * nNode;
-K = zeros(nDOF, nDOF);
-
-for e = 1:nElem
-    n1 = e;  n2 = e + 1;
-    dofs = [2*n1-1, 2*n1, 2*n2-1, 2*n2];
+K = zeros(nDOF);
+for e = 1:2
+    dofs = [2*e-1, 2*e, 2*e+1, 2*e+2];
     K(dofs, dofs) = K(dofs, dofs) + ke;
 end
 
-%% Force vector: central load at node 2 (v direction)
-f = zeros(nDOF, 1);
-f(2*(nElem/2+1)-1) = P;
+F = zeros(nDOF,1);
+F(3) = -P;                   % downward load at DOF 3 (v2)
+fixedDOFs = [1, 5];          % v1=0, v3=0
+freeDOFs  = [2, 3, 4, 6];
 
-%% BCs: pin at node 1 (v1=0) and node 3 (v3=0)
-fixedDOFs = [1, 2*nNode-1];
-freeDOFs  = setdiff(1:nDOF, fixedDOFs);
+u_free = K(freeDOFs,freeDOFs) \ F(freeDOFs);
+u = zeros(nDOF,1);  u(freeDOFs) = u_free;
 
-K_red = K(freeDOFs, freeDOFs);
-f_red = f(freeDOFs);
+R = K*u - F;
+fprintf('th1=%.4f rad, v2=%.4f mm, th2=%.4f, th3=%.4f rad\n', ...
+        u(2), u(3)*1000, u(4), u(6));
+fprintf('R1=%.1f N, R3=%.1f N\n', R(1), R(5));
+fprintf('v2_analytic = %.4f mm\n', P*L^3/(48*EI)*1000);
+\end{lstlisting}
 
-u_free = K_red \ f_red;
-u = zeros(nDOF, 1);
-u(freeDOFs) = u_free;
+% ---------------------------------------------------------------
+\section{Euler-Bernoulli Beam: Continuous Beam}
+\label{lst:beam_3elem}
 
-v_mid = u(2*(nElem/2+1)-1);
-v_analytic = P * L_total^3 / (48*EI);
+\begin{lstlisting}[caption={Three-element continuous beam (Chapter~\ref{ch:beam})},
+                   label={code:beam_3elem}]
+% fem_beam_3elem.m -- Chapter 5: 3-element continuous beam
+% Nodes: 1=0, 2=3000, 3=5000, 4=6000 mm
+% BCs: w1=0 (pin), w2=0 (roller), w4=0 (roller)
+% Load: q=10 N/mm on element 1; P=30000 N at node 3
+clear; clc; close all;
 
-fprintf('FEM mid-span deflection:      %.6e m\n', v_mid);
-fprintf('Analytical (PL^3/48EI):       %.6e m\n', v_analytic);
-fprintf('Error: %.4f%%\n', abs(v_mid - v_analytic)/v_analytic * 100);
+E=210000; Iy=5481140; EI=E*Iy; z_max=70;
+xn=[0;3000;5000;6000]; Le=diff(xn);
+nEl=3; nDOF=8;
+
+K=zeros(nDOF);
+for e=1:nEl
+    L=Le(e); EIL3=EI/L^3;
+    ke=EIL3*[12,6*L,-12,6*L; 6*L,4*L^2,-6*L,2*L^2;
+            -12,-6*L,12,-6*L; 6*L,2*L^2,-6*L,4*L^2];
+    dofs=[2*e-1,2*e,2*e+1,2*e+2];
+    K(dofs,dofs)=K(dofs,dofs)+ke;
+end
+
+F=zeros(nDOF,1);
+q=10; L1=Le(1);
+F([1,2,3,4])=F([1,2,3,4])+(-q*L1/12)*[6;L1;6;-L1];
+F(5)=F(5)-30000;
+
+fixedDOFs=[1,3,7]; freeDOFs=[2,4,5,6,8];
+u=zeros(nDOF,1);
+u(freeDOFs)=K(freeDOFs,freeDOFs)\F(freeDOFs);
+R=K*u-F;
+
+fprintf('th1=%.4e, th2=%.4e, w3=%.4f mm\n',u(2),u(4),u(5));
+fprintf('th3=%.4e, th4=%.4e\n',u(6),u(8));
+fprintf('R1=%.1f N, R2=%.1f N, R4=%.1f N\n',R(1),R(3),R(7));
+
+My_max=0;
+for e=1:nEl
+    L=Le(e); dofs=[2*e-1,2*e,2*e+1,2*e+2]; ue=u(dofs);
+    xi=linspace(0,L,201);
+    H1pp=12*xi/L^3-6/L^2; H2pp=6*xi/L^2-4/L;
+    H3pp=-12*xi/L^3+6/L^2; H4pp=6*xi/L^2-2/L;
+    v2nd=H1pp*ue(1)+H2pp*ue(2)+H3pp*ue(3)+H4pp*ue(4);
+    if e==1
+        v2nd=v2nd+(-q/(24*EI))*(2*L^2-12*L*xi+12*xi.^2);
+    end
+    My_el=EI*v2nd;
+    My_max=max(My_max,max(abs(My_el)));
+end
+sig_max=My_max*z_max/Iy;
+fprintf('|M|_max=%.4g Nmm, sigma_max=%.4g MPa\n',My_max,sig_max);
 \end{lstlisting}
 
 % ---------------------------------------------------------------
