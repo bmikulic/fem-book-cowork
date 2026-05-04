@@ -1,0 +1,102 @@
+% preamble.tex — Packages and custom commands for FEM Book
+
+%% Page layout
+\usepackage[a4paper, top=2.5cm, bottom=2.5cm, left=3cm, right=2.5cm]{geometry}
+
+%% Typography
+\usepackage{microtype}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+%% Mathematics
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{bm}           % bold math symbols (\bm{})
+
+%% Figures and tables
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+
+%% TikZ for drawings
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, shapes.geometric, positioning, calc, decorations.pathmorphing, patterns}
+
+%% MATLAB code listings
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{matlabgreen}{RGB}{28,172,0}
+\definecolor{matlabpurple}{RGB}{170,55,241}
+\definecolor{matlabblue}{RGB}{0,0,255}
+\definecolor{codegray}{RGB}{245,245,245}
+
+\lstdefinestyle{matlab}{
+    language=Matlab,
+    backgroundcolor=\color{codegray},
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{matlabblue}\bfseries,
+    commentstyle=\color{matlabgreen}\itshape,
+    stringstyle=\color{matlabpurple},
+    numberstyle=\tiny\color{gray},
+    numbers=left,
+    numbersep=8pt,
+    frame=single,
+    framerule=0.5pt,
+    rulecolor=\color{gray!40},
+    breaklines=true,
+    breakatwhitespace=false,
+    tabsize=4,
+    showstringspaces=false,
+    captionpos=b,
+}
+\lstset{style=matlab}
+
+%% Cross-references and hyperlinks
+\usepackage[hidelinks, colorlinks=true, linkcolor=blue!70!black,
+            citecolor=green!50!black, urlcolor=blue]{hyperref}
+\usepackage[capitalize, noabbrev]{cleveref}
+
+%% Headers and footers
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\nouppercase{\leftmark}}
+\fancyhead[LO]{\nouppercase{\rightmark}}
+\renewcommand{\headrulewidth}{0.4pt}
+
+%% Theorem environments
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[chapter]
+\newtheorem{example}{Example}[chapter]
+\newtheorem{remark}{Remark}[chapter]
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[chapter]
+
+%% Custom math commands
+\newcommand{\vect}[1]{\bm{#1}}           % vector: \vect{u}
+\newcommand{\matr}[1]{\bm{#1}}           % matrix: \matr{K}
+\newcommand{\stiff}{\matr{K}}            % global stiffness
+\newcommand{\mass}{\matr{M}}             % global mass
+\newcommand{\damp}{\matr{C}}             % global damping
+\newcommand{\transpose}{^{\mathsf{T}}}   % transpose
+\newcommand{\inv}{^{-1}}                 % inverse
+\newcommand{\dd}{\,\mathrm{d}}           % differential
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}  % partial derivative
+
+%% Equation box
+\usepackage{tcolorbox}
+\tcbuselibrary{most}
+\newtcolorbox{importantbox}{
+    colback=blue!5!white, colframe=blue!60!black,
+    fonttitle=\bfseries, title=Key Result,
+    boxrule=0.8pt, arc=4pt
+}

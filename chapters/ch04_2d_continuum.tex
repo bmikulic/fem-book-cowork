@@ -1,0 +1,200 @@
+\chapter{Two-Dimensional Continuum Elements}
+\label{ch:2d_continuum}
+
+\section{Plane Elasticity}
+
+Two-dimensional continuum elements model thin plates or long prismatic
+bodies~\cite{bathe2006finite,hughes2000fem}. Two assumptions are common:
+\begin{description}
+    \item[Plane stress] Thin plates loaded in their plane: $\sigma_z = \tau_{xz} = \tau_{yz} = 0$.
+    \item[Plane strain] Long bodies with constrained out-of-plane strain: $\varepsilon_z = \gamma_{xz} = \gamma_{yz} = 0$.
+\end{description}
+
+\subsection{Stress and Strain Vectors}
+
+For both cases, the in-plane state is described by:
+\begin{equation}
+    \vect{\sigma} = \begin{bmatrix}\sigma_x \\ \sigma_y \\ \tau_{xy}\end{bmatrix},
+    \qquad
+    \vect{\varepsilon} = \begin{bmatrix}\varepsilon_x \\ \varepsilon_y \\ \gamma_{xy}\end{bmatrix}
+    \label{eq:2d_stress_strain}
+\end{equation}
+
+\subsection{Constitutive Matrix}
+
+\textbf{Plane stress} ($\nu$ = Poisson's ratio, $E$ = Young's modulus):
+\begin{equation}
+    \matr{D}_{\text{ps}} = \frac{E}{1-\nu^2}
+    \begin{bmatrix} 1 & \nu & 0 \\ \nu & 1 & 0 \\ 0 & 0 & \frac{1-\nu}{2} \end{bmatrix}
+    \label{eq:D_planestress}
+\end{equation}
+
+\textbf{Plane strain:}
+\begin{equation}
+    \matr{D}_{\text{pe}} = \frac{E}{(1+\nu)(1-2\nu)}
+    \begin{bmatrix} 1-\nu & \nu & 0 \\ \nu & 1-\nu & 0 \\ 0 & 0 & \frac{1-2\nu}{2} \end{bmatrix}
+    \label{eq:D_planestrain}
+\end{equation}
+
+\section{Constant Strain Triangle (CST)}
+
+The CST (or T3) is the simplest 2D element: 3 nodes, 2 DOFs per node (6 total),
+with linear displacement fields and constant strains throughout.
+
+\subsection{Shape Functions}
+
+For a triangle with nodes $(x_1,y_1)$, $(x_2,y_2)$, $(x_3,y_3)$ and element
+area $A_e$, the shape functions are the \emph{area coordinates}:
+\begin{equation}
+    N_i(x,y) = \frac{1}{2A_e}(a_i + b_i x + c_i y), \quad i = 1,2,3
+    \label{eq:cst_shape}
+\end{equation}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>=Stealth, scale=1.2]
+  %% Triangle vertices
+  \coordinate (N1) at (0,0);
+  \coordinate (N2) at (3.5,0);
+  \coordinate (N3) at (1.1,2.2);
+  %% Shaded area
+  \fill[gray!20] (N1) -- (N2) -- (N3) -- cycle;
+  \draw[thick] (N1) -- (N2) -- (N3) -- cycle;
+  \node at (1.5,0.65) {$A_e$};
+  %% Nodes
+  \filldraw (N1) circle (3.5pt) node[below left=1pt] {1};
+  \filldraw (N2) circle (3.5pt) node[below right=1pt] {2};
+  \filldraw (N3) circle (3.5pt) node[above=2pt] {3};
+  %% DOF arrows — node 1 (lower-left)
+  \draw[->,thick,blue!70!black] (N1) -- ++(-0.75,0) node[left] {\small $u_1$};
+  \draw[->,thick,blue!70!black] (N1) -- ++(0,-0.75) node[below] {\small $v_1$};
+  %% DOF arrows — node 2 (lower-right)
+  \draw[->,thick,blue!70!black] (N2) -- ++(0.75,0) node[right] {\small $u_2$};
+  \draw[->,thick,blue!70!black] (N2) -- ++(0,-0.75) node[below] {\small $v_2$};
+  %% DOF arrows — node 3 (top)
+  \draw[->,thick,blue!70!black] (N3) -- ++(-0.75,0) node[left] {\small $u_3$};
+  \draw[->,thick,blue!70!black] (N3) -- ++(0,0.75) node[above] {\small $v_3$};
+  %% Coordinate axes (bottom-left, away from triangle)
+  \draw[->] (-1.3,-0.9) -- (-0.5,-0.9) node[right] {$x$};
+  \draw[->] (-1.3,-0.9) -- (-1.3,-0.1) node[above] {$y$};
+\end{tikzpicture}
+\caption{CST element: 3 nodes, 2 DOFs per node ($u_i$, $v_i$), element area $A_e$.}
+\label{fig:cst_element}
+\end{figure}
+
+where:
+\begin{align*}
+    a_1 &= x_2 y_3 - x_3 y_2, \quad b_1 = y_2 - y_3, \quad c_1 = x_3 - x_2 \\
+    2A_e &= \det\begin{bmatrix}1 & x_1 & y_1 \\ 1 & x_2 & y_2 \\ 1 & x_3 & y_3\end{bmatrix}
+\end{align*}
+(and cyclic permutations for $i=2,3$).
+
+\subsection{Strain-Displacement Matrix}
+
+\begin{equation}
+    \vect{\varepsilon} = \matr{B}\, \vect{u}^e, \qquad
+    \matr{B} = \frac{1}{2A_e}
+    \begin{bmatrix}
+        b_1 &  0  & b_2 &  0  & b_3 &  0  \\
+         0  & c_1 &  0  & c_2 &  0  & c_3 \\
+        c_1 & b_1 & c_2 & b_2 & c_3 & b_3
+    \end{bmatrix}
+    \label{eq:B_cst}
+\end{equation}
+Note that $\matr{B}$ is constant $\Rightarrow$ strain is constant over the CST element.
+
+\subsection{Element Stiffness Matrix}
+
+\begin{equation}
+    \matr{k}^e = \int_{A_e} \matr{B}\transpose \matr{D} \matr{B} \,t \dd A
+    = t\, A_e\, \matr{B}\transpose \matr{D} \matr{B}
+    \label{eq:cst_stiffness}
+\end{equation}
+where $t$ is the element thickness.
+
+\begin{importantbox}
+The CST stiffness is evaluated in \emph{closed form} (no numerical integration
+required) because $\matr{B}$ and $\matr{D}$ are both constant over the element:
+\[
+    \matr{k}^e = t\, A_e\, \matr{B}\transpose \matr{D} \matr{B} \in \mathbb{R}^{6\times6}
+\]
+\end{importantbox}
+
+\section{Isoparametric Quadrilateral Element (Q4)}
+
+The 4-node quadrilateral (Q4) uses the same polynomials to interpolate both
+geometry and displacement — this is the \emph{isoparametric} concept.
+
+\subsection{Shape Functions in Natural Coordinates}
+
+In the reference square $(\xi, \eta) \in [-1,1]^2$:
+\begin{equation}
+    N_i(\xi,\eta) = \frac{1}{4}(1 + \xi_i\xi)(1 + \eta_i\eta), \quad i=1,2,3,4
+    \label{eq:q4_shape}
+\end{equation}
+where $(\xi_i, \eta_i)$ are the corner coordinates: $(-1,-1),(1,-1),(1,1),(-1,1)$.
+
+\subsection{Jacobian Mapping}
+
+The physical coordinates are mapped as:
+\begin{equation}
+    x = \sum_{i=1}^4 N_i\, x_i, \qquad y = \sum_{i=1}^4 N_i\, y_i
+    \label{eq:q4_map}
+\end{equation}
+The Jacobian matrix $\matr{J}$ relates derivatives:
+\begin{equation}
+    \matr{J} = \begin{bmatrix} \pd{x}{\xi} & \pd{y}{\xi} \\ \pd{x}{\eta} & \pd{y}{\eta} \end{bmatrix}
+    = \sum_{i=1}^4
+    \begin{bmatrix} \pd{N_i}{\xi} \\ \pd{N_i}{\eta} \end{bmatrix}
+    \begin{bmatrix} x_i & y_i \end{bmatrix}
+    \label{eq:jacobian}
+\end{equation}
+
+Physical derivatives are recovered as:
+\begin{equation}
+    \begin{bmatrix} \pd{N_i}{x} \\ \pd{N_i}{y} \end{bmatrix}
+    = \matr{J}\inv
+    \begin{bmatrix} \pd{N_i}{\xi} \\ \pd{N_i}{\eta} \end{bmatrix}
+\end{equation}
+
+\subsection{Numerical Integration (Gauss Quadrature)}
+
+The element stiffness integral is evaluated by $2\times2$ Gauss quadrature
+(sufficient for Q4):
+\begin{equation}
+    \matr{k}^e = t \int_{-1}^{1}\int_{-1}^{1}
+    \matr{B}(\xi,\eta)\transpose \matr{D}\, \matr{B}(\xi,\eta)\, |\matr{J}| \dd\xi\dd\eta
+    \approx t \sum_{i=1}^{n_g} \sum_{j=1}^{n_g} w_i w_j\,
+    \matr{B}(\xi_i,\eta_j)\transpose \matr{D}\, \matr{B}(\xi_i,\eta_j)\, |\matr{J}(\xi_i,\eta_j)|
+    \label{eq:q4_stiffness}
+\end{equation}
+For $2\times2$ Gauss: $n_g=2$, $\xi_i = \pm 1/\sqrt{3}$, $w_i = 1$.
+
+\begin{center}
+\begin{tabular}{@{}ccc@{}}
+    \toprule
+    Order & Points per direction & Exact for polynomials up to \\
+    \midrule
+    1 & 1 & degree 1 \\
+    2 & 2 & degree 3 \\
+    3 & 3 & degree 5 \\
+    \bottomrule
+\end{tabular}
+\end{center}
+
+\section{Worked Example: CST Plate in Tension}
+
+\begin{example}[Single CST element under tension]
+\label{ex:cst_tension}
+
+A single CST element: nodes at $(0,0)$, $(1,0)$, $(0,1)$, thickness $t=0.01$ m,
+$E = 200\times10^9$ Pa, $\nu = 0.3$, plane stress. Apply $\sigma_x = 100$ MPa
+(force $F = 0.5$ MN at nodes 2 and 3).
+
+\medskip
+\noindent $A_e = 0.5$ m$^2$,\quad
+$\matr{B}$: constant from \cref{eq:B_cst},\quad
+$\matr{D}$: from \cref{eq:D_planestress}.
+
+\noindent See \Cref{lst:cst2d} in the Appendix for the MATLAB implementation.
+\end{example}

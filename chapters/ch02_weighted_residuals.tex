@@ -1,0 +1,434 @@
+\chapter{Weighted Residual Methods}
+\label{ch:weighted_residuals}
+
+\section{Motivation}
+
+The finite element method can be introduced from several points of view:
+direct stiffness, energy methods, virtual work, or weighted residual methods.
+The weighted residual viewpoint is useful because it shows how an approximate
+solution is obtained when the differential equation cannot be satisfied exactly
+at every point of the domain.
+
+Consider a trial solution $\tilde{u}(x)$ that satisfies the essential boundary
+conditions but is not the exact solution. After substitution into the governing
+differential equation, a nonzero residual remains:
+\begin{equation}
+    R(x) = \mathcal{L}\tilde{u}(x) - f(x)
+    \label{eq:residual_definition}
+\end{equation}
+where $\mathcal{L}$ is the differential operator and $f(x)$ is the loading term.
+Weighted residual methods determine the unknown coefficients in $\tilde{u}$ by
+requiring the residual to vanish in an averaged or weighted sense:
+\begin{equation}
+    \int_{\Omega} w_i(x) R(x) \dd \Omega = 0,
+    \qquad i = 1,2,\ldots,n
+    \label{eq:weighted_residual_statement}
+\end{equation}
+where $w_i(x)$ are weighting functions. Different choices of $w_i$ lead to
+different methods.
+
+\section{Axially Loaded Bar}
+
+Consider the prismatic member in \cref{fig:wr_bar}, fixed at $x=0$ and free at
+$x=L$. Since the load acts only along the axis of the member, the structural
+model is a bar or rod rather than a bending beam. The bar is subjected to a
+distributed axial load
+\begin{equation}
+    p(x) = p_0 \left(\frac{x}{L}\right)^2
+    \label{eq:wr_distributed_load}
+\end{equation}
+with constant $E$ and $A$.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth, x=1cm, y=1cm]
+  \tikzset{
+    load/.style={->,thick,blue!70!black},
+    dim/.style={<->,thin},
+    tick/.style={thin},
+  }
+  %% Fixed wall
+  \fill[pattern=north east lines, pattern color=gray!70] (-0.32,-0.42) rectangle (0,0.42);
+  \draw[thick] (0,-0.42) -- (0,0.42);
+  %% Bar body
+  \fill[gray!18] (0,-0.16) rectangle (6.2,0.16);
+  \draw[thick] (0,-0.16) rectangle (6.2,0.16);
+  %% Distributed axial load arrows, increasing to the right
+  \foreach \x/\len in {0.65/0.30,1.30/0.38,1.95/0.46,2.60/0.54,3.25/0.62,3.90/0.70,4.55/0.78,5.20/0.86}{
+    \draw[load] (\x,0.55) -- ++(\len,0);
+  }
+  \node[blue!70!black,above] at (3.25,0.72) {$p(x)=p_0(x/L)^2$};
+  %% Free end label
+  \node[anchor=west] at (6.42,0.18) {free end};
+  %% Dimension and axis
+  \draw[tick] (0,-0.52) -- (0,-0.82);
+  \draw[tick] (6.2,-0.52) -- (6.2,-0.82);
+  \draw[dim] (0,-0.68) -- (6.2,-0.68)
+    node[midway,fill=white,inner sep=1pt] {$L$};
+  \node[below] at (0,-0.82) {\small $x=0$};
+  \node[below] at (6.2,-0.82) {\small $x=L$};
+  \draw[->,thin] (6.55,-0.68) -- (7.20,-0.68) node[right] {$x$};
+\end{tikzpicture}
+\caption{Fixed-free bar subjected to a nonuniform axial load.}
+\label{fig:wr_bar}
+\end{figure}
+
+\subsection{Equilibrium of a Differential Element}
+
+To derive the governing equation, isolate a differential element of length
+$\dd x$ as shown in \cref{fig:wr_differential_element}. Let $N(x)$ denote the
+internal axial force resultant. The sign convention is that $p(x)$ is positive
+in the positive $x$-direction and $N$ is positive in tension.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=Stealth, x=1cm, y=1cm]
+  \tikzset{
+    load/.style={->,thick,blue!70!black},
+    force/.style={->,very thick,red!70!black},
+    dim/.style={<->,thin},
+    cut/.style={dashed,gray!65},
+    tick/.style={thin},
+  }
+  %% Differential element
+  \fill[gray!18] (1.55,-0.25) rectangle (5.15,0.25);
+  \draw[thick] (1.55,-0.25) rectangle (5.15,0.25);
+  %% Cut faces
+  \draw[cut] (1.55,-0.52) -- (1.55,0.64);
+  \draw[cut] (5.15,-0.52) -- (5.15,0.64);
+  %% Internal axial forces
+  \draw[force] (1.55,0) -- (0.25,0)
+    node[midway,above=2pt] {$N(x)$};
+  \draw[force] (5.15,0) -- (6.65,0)
+    node[midway,above=2pt] {$N(x+\dd x)$};
+  %% Equivalent resultant of the distributed axial load over dx
+  \draw[load,very thick] (2.75,0.68) -- (4.10,0.68);
+  \node[blue!70!black,above] at (3.43,0.86) {$p(x)\dd x$};
+  %% Coordinates and dimension
+  \draw[tick] (1.55,-0.58) -- (1.55,-0.88);
+  \draw[tick] (5.15,-0.58) -- (5.15,-0.88);
+  \draw[dim] (1.55,-0.73) -- (5.15,-0.73)
+    node[midway,fill=white,inner sep=1pt] {$\dd x$};
+  \node[below] at (1.55,-0.88) {\small $x$};
+  \node[below] at (5.15,-0.88) {\small $x+\dd x$};
+  \draw[->,thin] (5.55,-0.73) -- (6.25,-0.73) node[right] {$x$};
+\end{tikzpicture}
+\caption{Free-body diagram of a differential bar element.}
+\label{fig:wr_differential_element}
+\end{figure}
+
+Force equilibrium in the axial direction gives
+\begin{equation}
+    -N(x) + N(x+\dd x) + p(x)\dd x = 0 .
+    \label{eq:wr_force_equilibrium_discrete}
+\end{equation}
+Using the Taylor expansion
+\[
+    N(x+\dd x) = N(x) + \frac{\dd N}{\dd x}\dd x
+\]
+and neglecting higher-order terms, \cref{eq:wr_force_equilibrium_discrete}
+becomes
+\begin{equation}
+    \frac{\dd N}{\dd x} + p(x) = 0 .
+    \label{eq:wr_axial_equilibrium}
+\end{equation}
+
+\subsection{Constitutive and Kinematic Relations}
+
+The axial strain is related to the displacement field by
+\begin{equation}
+    \varepsilon(x) = \frac{\dd u}{\dd x}.
+    \label{eq:wr_axial_strain}
+\end{equation}
+For a linear elastic material,
+\begin{equation}
+    \sigma(x) = E\varepsilon(x).
+    \label{eq:wr_hooke_law}
+\end{equation}
+The axial force resultant is
+\begin{equation}
+    N(x) = \sigma(x)A = EA\frac{\dd u}{\dd x}.
+    \label{eq:wr_axial_force_displacement}
+\end{equation}
+Substituting \cref{eq:wr_axial_force_displacement} into
+\cref{eq:wr_axial_equilibrium} gives the differential equation of an axially
+loaded bar:
+\begin{equation}
+    \frac{\dd}{\dd x}\!\left(EA\frac{\dd u}{\dd x}\right) + p(x) = 0 .
+    \label{eq:wr_general_strong_bar}
+\end{equation}
+Equivalently,
+\begin{equation}
+    -\frac{\dd}{\dd x}\!\left(EA\frac{\dd u}{\dd x}\right) = p(x).
+\end{equation}
+
+For constant $E$ and $A$, and for the load in
+\cref{eq:wr_distributed_load}, the governing equation becomes
+\begin{align}
+    -EA \frac{\dd^2 u}{\dd x^2} &= p_0\left(\frac{x}{L}\right)^2,
+    \qquad 0 < x < L
+    \label{eq:wr_strong_bar} \\
+    u(0) &= 0, \qquad EA u'(L) = 0 .
+    \notag
+\end{align}
+The first boundary condition is essential because it prescribes displacement.
+The second is natural because it prescribes axial force. If an external axial
+force $F$ were applied at $x=L$, the natural boundary condition would be
+$EAu'(L)=F$.
+
+For this introductory comparison, use the one-term trial function
+\begin{equation}
+    \tilde{u}(x) = a \left[\left(\frac{x}{L}\right)^2
+    - 2\left(\frac{x}{L}\right)\right]
+    \label{eq:wr_trial_function}
+\end{equation}
+where $a$ is the unknown coefficient. This function satisfies both boundary
+conditions:
+\[
+    \tilde{u}(0)=0, \qquad EA\tilde{u}'(L)=0 .
+\]
+It is not flexible enough to satisfy the differential equation exactly, so a
+residual remains.
+
+Let
+\[
+    \xi = \frac{x}{L}, \qquad 0 \leq \xi \leq 1 .
+\]
+Substituting \cref{eq:wr_trial_function} into \cref{eq:wr_strong_bar} gives
+\begin{equation}
+    R(\xi) =
+    -EA \frac{\dd^2\tilde{u}}{\dd x^2} - p_0\xi^2
+    =
+    -\frac{2EA}{L^2}a - p_0\xi^2 .
+    \label{eq:wr_bar_residual}
+\end{equation}
+The three methods below differ only in how they choose $a$ from this residual.
+
+\section{Collocation Method}
+
+The collocation method requires the residual to vanish at selected points in
+the domain. Since the approximation contains one unknown coefficient, one
+collocation point is needed. Choosing the midpoint $\xi=1/2$ gives
+\begin{equation}
+    R\left(\frac{1}{2}\right)=0 .
+\end{equation}
+Using \cref{eq:wr_bar_residual},
+\begin{equation}
+    -\frac{2EA}{L^2}a - \frac{p_0}{4} = 0
+    \qquad\Rightarrow\qquad
+    a_{\mathrm{col}} = -\frac{p_0L^2}{8EA}.
+    \label{eq:wr_collocation_a}
+\end{equation}
+The approximate displacement is therefore
+\begin{equation}
+    \tilde{u}_{\mathrm{col}}(x)
+    = -\frac{p_0L^2}{8EA}\left(\xi^2-2\xi\right).
+\end{equation}
+
+\section{Subdomain Method}
+
+The subdomain method requires the residual to have zero average over each
+subdomain. With one unknown coefficient, the whole bar is taken as one
+subdomain:
+\begin{equation}
+    \int_0^L R(x)\dd x = 0 .
+\end{equation}
+Equivalently,
+\begin{equation}
+    L\int_0^1 \left(
+    -\frac{2EA}{L^2}a - p_0\xi^2
+    \right)\dd \xi = 0 .
+\end{equation}
+Thus,
+\begin{equation}
+    -\frac{2EA}{L^2}a - \frac{p_0}{3} = 0
+    \qquad\Rightarrow\qquad
+    a_{\mathrm{sub}} = -\frac{p_0L^2}{6EA}.
+    \label{eq:wr_subdomain_a}
+\end{equation}
+
+\section{Galerkin Method}
+
+In the Galerkin method, the weighting function is chosen from the same family
+as the trial function. Here,
+\begin{equation}
+    w(\xi) = \xi^2 - 2\xi .
+    \label{eq:wr_galerkin_weight}
+\end{equation}
+The weighted residual statement is
+\begin{equation}
+    \int_0^L w(x)R(x)\dd x = 0 .
+\end{equation}
+Substituting \cref{eq:wr_bar_residual,eq:wr_galerkin_weight} and changing to
+$\xi$ gives
+\begin{equation}
+    L\int_0^1 (\xi^2-2\xi)
+    \left(
+    -\frac{2EA}{L^2}a - p_0\xi^2
+    \right)\dd \xi = 0 .
+\end{equation}
+The required integrals are
+\[
+    \int_0^1(\xi^2-2\xi)\dd\xi = -\frac{2}{3},
+    \qquad
+    \int_0^1(\xi^2-2\xi)\xi^2\dd\xi = -\frac{3}{10}.
+\]
+Therefore,
+\begin{equation}
+    \frac{4EA}{3L^2}a + \frac{3p_0}{10} = 0
+    \qquad\Rightarrow\qquad
+    a_{\mathrm{gal}} = -\frac{9p_0L^2}{40EA}.
+    \label{eq:wr_galerkin_a}
+\end{equation}
+
+\begin{importantbox}
+The Galerkin method is the weighted residual method that leads directly to the
+standard finite element formulation when piecewise polynomial trial functions
+are used and the governing equation is written in weak form.
+\end{importantbox}
+
+\section{Comparison with the Exact Solution}
+
+For this example, the exact solution is obtained by integrating
+\cref{eq:wr_strong_bar} twice and applying the boundary conditions:
+\begin{equation}
+    u(x) = \frac{p_0L^2}{EA}
+    \left(\frac{\xi}{3} - \frac{\xi^4}{12}\right).
+    \label{eq:wr_exact_solution}
+\end{equation}
+At the free end,
+\begin{equation}
+    u(L) = \frac{p_0L^2}{4EA}.
+\end{equation}
+Since $\tilde{u}(L)=-a$, the three approximations give the tip displacements
+listed in \cref{tab:wr_comparison}.
+
+\begin{table}[htbp]
+\centering
+\caption{Comparison of one-term weighted residual approximations.}
+\label{tab:wr_comparison}
+\begin{tabular}{@{}lll@{}}
+    \toprule
+    Method & Coefficient $a$ & Tip displacement $\tilde{u}(L)$ \\
+    \midrule
+    Collocation &
+    $-\dfrac{p_0L^2}{8EA}$ &
+    $\dfrac{p_0L^2}{8EA}$ \\
+    Subdomain &
+    $-\dfrac{p_0L^2}{6EA}$ &
+    $\dfrac{p_0L^2}{6EA}$ \\
+    Galerkin &
+    $-\dfrac{9p_0L^2}{40EA}$ &
+    $\dfrac{9p_0L^2}{40EA}$ \\
+    Exact &
+    -- &
+    $\dfrac{p_0L^2}{4EA}$ \\
+    \bottomrule
+\end{tabular}
+\end{table}
+
+The collocation method makes the residual zero at one selected point, but the
+residual may still be large elsewhere. The subdomain method balances the total
+residual over the domain. The Galerkin method weights the residual with the
+same function used to approximate the displacement, which gives the best result
+among these one-term approximations for this problem.
+
+\section{MATLAB Implementation and Results}
+
+The following MATLAB script evaluates the coefficients, prints a numerical
+tip-displacement comparison, and generates the normalized displacement curves
+shown in \cref{fig:wr_matlab_comparison}.
+
+\Cref{fig:wr_matlab_comparison} compares the three weighted residual
+approximations with the exact solution. The displacement is normalized as
+\(uEA/(p_0L^2)\), so the plot shows the method error independently of the
+chosen numerical values of \(E\), \(A\), \(p_0\), and \(L\).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{figures/weighted_residual_comparison.pdf}
+\caption{MATLAB comparison of collocation, subdomain, and Galerkin one-term
+approximations against the exact solution.}
+\label{fig:wr_matlab_comparison}
+\end{figure}
+
+\begin{lstlisting}[caption={MATLAB comparison of weighted residual methods},
+                   label={lst:wr_matlab_comparison}]
+% weighted_residual_comparison.m
+% One-term weighted residual approximation for an axially loaded bar
+
+clear; clc; close all;
+
+%% Problem parameters
+L  = 1.0;        % bar length [m]
+E  = 210e9;      % Young's modulus [Pa]
+A  = 1.0e-4;     % cross-sectional area [m^2]
+p0 = 1.0e4;      % load intensity scale [N/m]
+EA = E*A;        % axial stiffness [N]
+
+%% Method coefficients for u_tilde = a*(xi^2 - 2*xi)
+a_col = -p0*L^2/(8*EA);       % collocation at xi = 1/2
+a_sub = -p0*L^2/(6*EA);       % one subdomain over [0,L]
+a_gal = -9*p0*L^2/(40*EA);    % Galerkin weighting
+
+methodNames = {'Collocation'; 'Subdomain'; 'Galerkin'};
+aValues = [a_col; a_sub; a_gal];
+tipValues = -aValues;         % xi=1 gives u_tilde(L) = -a
+
+%% Exact tip displacement and percent error
+uTipExact = p0*L^2/(4*EA);
+percentError = abs(tipValues - uTipExact)/uTipExact * 100;
+
+fprintf('Weighted residual comparison for axial bar\n');
+fprintf('L = %.3f m, EA = %.4e N, p0 = %.4e N/m\n\n', L, EA, p0);
+fprintf('%-14s %14s %18s %12s\n', ...
+        'Method', 'a [m]', 'u_tilde(L) [m]', 'Error [%]');
+fprintf('%s\n', repmat('-', 1, 62));
+
+for i = 1:numel(methodNames)
+    fprintf('%-14s %14.6e %18.6e %12.3f\n', ...
+        methodNames{i}, aValues(i), tipValues(i), percentError(i));
+end
+fprintf('%-14s %14s %18.6e %12.3f\n', 'Exact', '--', uTipExact, 0);
+
+%% Normalized displacement curves
+xi = linspace(0, 1, 400);
+phi = xi.^2 - 2*xi;
+
+u_col_norm = -(1/8)  * phi;
+u_sub_norm = -(1/6)  * phi;
+u_gal_norm = -(9/40) * phi;
+u_exact_norm = xi/3 - xi.^4/12;
+
+figure('Name','Weighted Residual Comparison','Color','w');
+plot(xi, u_exact_norm, 'k-',  'LineWidth', 1.8); hold on;
+plot(xi, u_col_norm,   'b--', 'LineWidth', 1.3);
+plot(xi, u_sub_norm,   'r-.', 'LineWidth', 1.3);
+plot(xi, u_gal_norm,   'g:',  'LineWidth', 1.9);
+grid on; box on;
+xlabel('Normalized coordinate, \xi = x/L');
+ylabel('Normalized displacement, uEA/(p_0L^2)');
+legend('Exact', 'Collocation', 'Subdomain', 'Galerkin', ...
+       'Location', 'northwest');
+\end{lstlisting}
+
+\section{Connection to FEM}
+
+The finite element method uses the Galerkin idea locally on each element. The
+unknown displacement field is approximated by shape functions,
+\begin{equation}
+    u^e(x) = \vect{N}(x)\vect{u}^e ,
+\end{equation}
+and the weighting functions are chosen as the same shape functions. After
+integration by parts, the weak form for the axial bar becomes
+\begin{equation}
+    \int_0^L EA\, \frac{\dd w}{\dd x}
+    \frac{\dd u}{\dd x}\dd x
+    =
+    \int_0^L w p \dd x + w(L)F .
+    \label{eq:wr_weak_form_connection}
+\end{equation}
+This is the starting point for the bar element stiffness matrix derived in
+\cref{ch:1d}. In other words, the familiar finite element equations are not
+separate from weighted residual methods; they are the Galerkin weighted residual
+method applied element by element.

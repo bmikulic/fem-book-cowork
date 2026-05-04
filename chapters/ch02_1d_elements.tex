@@ -1,0 +1,837 @@
+\chapter{One-Dimensional Bar and Rod Elements}
+\label{ch:1d}
+
+\section{Direct Formulation of the Bar Element}
+\label{sec:direct_formulation}
+
+The simplest finite element is the two-node bar (rod) element, suitable for
+axially loaded members. Consider an element of length $L$, cross-sectional
+area $A$, and Young's modulus $E$, with nodes 1 and 2 having axial
+displacements $u_1$ and $u_2$~\cite{logan2011first,cook2002concepts}.
+
+Rather than starting from a variational principle, we derive the element
+stiffness directly from \emph{mechanics of materials}: equilibrium of axial
+forces combined with Hooke's law. The principle of virtual work, derived
+later in this chapter (\cref{sec:pvw}), reproduces the same stiffness matrix
+and provides the variational foundation for the entire finite element method.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>=Stealth, x=1cm, y=1cm,
+    disp/.style={->,very thick,blue!70!black},
+    force/.style={->,ultra thick,red!75!black}]
+  %% Bar body
+  \fill[gray!22] (0,-0.28) rectangle (6.5,0.28);
+  \draw[thick] (0,-0.28) rectangle (6.5,0.28);
+  %% Material label (above bar)
+  \node[above=3pt] at (3.25,0.28) {$E,\ A$};
+  %% Nodes
+  \filldraw (0,0) circle (4pt);
+  \filldraw (6.5,0) circle (4pt);
+  %% Node numbering (outside bar, below corners)
+  \node at (-0.30,-0.50) {\small\bfseries 1};
+  \node at (6.80,-0.50) {\small\bfseries 2};
+  %% Displacement arrows (blue, above bar) at each node
+  \draw[disp] (0,0.70) -- ++(1.30,0) node[above,midway] {$u_1$};
+  \draw[disp] (6.5,0.70) -- ++(1.30,0) node[above,midway] {$u_2$};
+  %% Force arrows (red, below bar) at each node
+  \draw[force] (0,-1.05) -- ++(1.30,0) node[below,midway] {$F_1$};
+  \draw[force] (6.5,-1.05) -- ++(1.30,0) node[below,midway] {$F_2$};
+  %% Length dimension
+  \draw[<->,thin] (0,-1.70) -- (6.5,-1.70);
+  \node[fill=white,inner sep=1pt] at (3.25,-1.70) {$L$};
+  %% x-axis
+  \draw[->,thin] (-0.70,-2.20) -- (8.20,-2.20) node[right] {$x$};
+\end{tikzpicture}
+\caption{Two-node bar element: nodal displacements $u_1$, $u_2$ (blue, above) and external nodal forces $F_1$, $F_2$ (red, below), with cross-section $A$, modulus $E$, length $L$.}
+\label{fig:bar_element}
+\end{figure}
+
+\subsection{Element Kinematics}
+
+For small deformations, the axial elongation of the element is the difference
+of nodal displacements:
+\begin{equation}
+    \Delta L = u_2 - u_1 .
+    \label{eq:bar_elongation}
+\end{equation}
+Assuming the strain is uniform along the element (consistent with linear
+displacement variation between nodes),
+\begin{equation}
+    \varepsilon = \frac{\Delta L}{L} = \frac{u_2 - u_1}{L} .
+    \label{eq:bar_strain_direct}
+\end{equation}
+Hooke's law and the axial force resultant $N = \sigma A$ give
+\begin{equation}
+    \sigma = E\varepsilon = \frac{E(u_2-u_1)}{L},
+    \qquad
+    N = \frac{EA(u_2-u_1)}{L} .
+    \label{eq:bar_axial_force_direct}
+\end{equation}
+
+\subsection{Stiffness Matrix from Equilibrium}
+
+Taking $N>0$ in tension, the external nodal forces required to produce the
+displacements $u_1, u_2$ are
+\begin{align}
+    F_1 &= -N = \frac{EA}{L}(u_1 - u_2),
+    \label{eq:bar_F1_direct} \\
+    F_2 &= +N = \frac{EA}{L}(u_2 - u_1) .
+    \label{eq:bar_F2_direct}
+\end{align}
+Collecting these in matrix form,
+\begin{equation}
+    \begin{bmatrix} F_1 \\ F_2 \end{bmatrix}
+    = \frac{EA}{L}
+    \begin{bmatrix} 1 & -1 \\ -1 & 1 \end{bmatrix}
+    \begin{bmatrix} u_1 \\ u_2 \end{bmatrix}
+    \quad\Longleftrightarrow\quad
+    \matr{k}^e\,\vect{u}^e = \vect{f}^e .
+\end{equation}
+The element stiffness matrix is therefore
+\begin{equation}
+    \matr{k}^e = \frac{EA}{L}\begin{bmatrix} 1 & -1 \\ -1 & 1 \end{bmatrix} .
+    \label{eq:bar_stiffness}
+\end{equation}
+
+\begin{importantbox}
+\begin{equation*}
+    \matr{k}^e = \frac{EA}{L}\begin{bmatrix} 1 & -1 \\ -1 & 1 \end{bmatrix}
+\end{equation*}
+\end{importantbox}
+
+\subsection{Unit Displacement Interpretation}
+
+The columns of $\matr{k}^e$ have a clear physical meaning. Set $u_1=1$ and
+$u_2=0$: the bar shortens, the strain is $\varepsilon = -1/L$, and the internal
+force is $N = -EA/L$ (compression). Equilibrium then requires the external
+forces $F_1 = +EA/L$ at node 1 and $F_2 = -EA/L$ at node 2 — exactly the first
+column of $\matr{k}^e$. The second column follows from $u_1=0,\ u_2=1$ by an
+identical argument.
+
+\begin{remark}
+The stiffness matrix is symmetric (Maxwell's reciprocal theorem) and singular
+because rows sum to zero: a uniform translation $u_1=u_2=c$ produces no
+strain and no force, reflecting the rigid-body mode of the unconstrained
+element.
+\end{remark}
+
+\section{Displacement Field Approximation}
+\label{sec:displacement_field}
+
+The direct formulation has used only nodal displacements. To analyze the
+response \emph{between} nodes — for postprocessing strains and stresses, or for
+representing distributed loading — we need an approximate displacement field
+$u(x)$.
+
+\subsection{Linear Shape Functions}
+
+The displacement field consistent with the constant-strain assumption used in
+\cref{eq:bar_strain_direct} is linear in $x$:
+\begin{equation}
+    u(x) = N_1(x)\,u_1 + N_2(x)\,u_2 = \vect{N}\,\vect{u}^e
+    \label{eq:bar_disp}
+\end{equation}
+with the linear Lagrange shape functions
+\begin{equation}
+    N_1(x) = 1 - \frac{x}{L}, \qquad N_2(x) = \frac{x}{L},
+    \qquad x \in [0,L] .
+    \label{eq:bar_shape}
+\end{equation}
+
+\begin{remark}
+Shape functions satisfy the \emph{partition of unity}, $N_1 + N_2 = 1$, and the
+\emph{Kronecker delta property}, $N_i(x_j) = \delta_{ij}$.
+\end{remark}
+
+The strain operator follows by differentiation,
+\begin{equation}
+    \varepsilon(x) = \frac{\dd u}{\dd x} = \matr{B}\,\vect{u}^e,
+    \qquad
+    \matr{B} = \frac{1}{L}\begin{bmatrix} -1 & 1 \end{bmatrix} ,
+    \label{eq:bar_strain}
+\end{equation}
+which recovers $\varepsilon = (u_2-u_1)/L$, in agreement with
+\cref{eq:bar_strain_direct}.
+
+\subsection{Enrichment by a Particular Solution}
+
+The strong form of the loaded bar, derived in \cref{ch:weighted_residuals}, is
+\begin{equation}
+    -EA\,\frac{\dd^2 u}{\dd x^2} = p(x), \qquad 0 < x < L .
+    \label{eq:bar_de}
+\end{equation}
+The linear interpolation \cref{eq:bar_disp} solves the \emph{homogeneous}
+equation $u'' = 0$ exactly, but cannot represent the inhomogeneous response
+when $p(x) \neq 0$.
+
+To recover the exact response within the element, augment the linear field
+with a \emph{particular solution} $u_p(x)$:
+\begin{equation}
+    u(x) = N_1(x)\,u_1 + N_2(x)\,u_2 + u_p(x) ,
+    \label{eq:bar_disp_enriched}
+\end{equation}
+where $u_p(x)$ satisfies the inhomogeneous equation with homogeneous endpoint
+conditions:
+\begin{equation}
+    -EA\,u_p''(x) = p(x), \qquad u_p(0) = 0, \qquad u_p(L) = 0 .
+    \label{eq:up_bvp}
+\end{equation}
+The boundary conditions on $u_p$ ensure that the linear part still recovers the
+nodal displacements at the endpoints, $u(0)=u_1$ and $u(L)=u_2$.
+
+\begin{importantbox}
+\textbf{Enriched trial function:}
+\begin{equation*}
+    u(x) = N_1(x)\,u_1 + N_2(x)\,u_2 + u_p(x) .
+\end{equation*}
+The first two terms carry the nodal displacements. The particular solution
+$u_p(x)$ carries the local response to the distributed load — solved once
+analytically per load case and added to every element under that loading.
+\end{importantbox}
+
+\subsection{Worked Example: Uniform Distributed Load}
+\label{sec:bar_uniform_load}
+
+For a uniform distributed axial load $p(x) = p_0$, integrating
+\cref{eq:up_bvp} twice and applying $u_p(0)=u_p(L)=0$ gives
+\begin{equation}
+    u_p(x) = \frac{p_0\,x(L - x)}{2EA} .
+    \label{eq:up_uniform}
+\end{equation}
+This is a parabolic profile peaking at midspan with
+$u_p(L/2) = p_0 L^2/(8EA)$. Substituting into \cref{eq:bar_disp_enriched}
+gives the complete element displacement field for a uniformly loaded bar:
+\begin{equation}
+    u(x) = \left(1-\frac{x}{L}\right)u_1
+         + \frac{x}{L}\,u_2
+         + \frac{p_0\,x(L-x)}{2EA} .
+    \label{eq:bar_disp_uniform}
+\end{equation}
+Differentiating once gives the axial strain
+\begin{equation}
+    \varepsilon(x) = \frac{u_2-u_1}{L}
+                  + \frac{p_0(L-2x)}{2EA} ,
+    \label{eq:bar_strain_enriched}
+\end{equation}
+and the internal axial force
+\begin{equation}
+    N(x) = EA\,\varepsilon(x)
+         = \frac{EA(u_2-u_1)}{L} + \frac{p_0(L-2x)}{2} .
+    \label{eq:bar_force_enriched}
+\end{equation}
+
+\section{Element Load Vector}
+
+External forces at the element ends follow from equilibrium with the internal
+axial force in \cref{eq:bar_force_enriched}: $F_1 = -N(0)$ and $F_2 = +N(L)$.
+Substituting,
+\begin{align}
+    F_1 &= \frac{EA}{L}(u_1-u_2) - \frac{p_0 L}{2}, \\
+    F_2 &= \frac{EA}{L}(u_2-u_1) - \frac{p_0 L}{2} .
+\end{align}
+Rearranging into the standard finite element form,
+\begin{equation}
+    \matr{k}^e\,\vect{u}^e = \vect{f}^e ,
+    \qquad
+    \vect{f}^e = \frac{p_0 L}{2}\begin{bmatrix} 1 \\ 1 \end{bmatrix} .
+    \label{eq:bar_load}
+\end{equation}
+Half of the total distributed load is placed at each node, recovering the
+familiar consistent load vector. Note that the same vector is obtained from
+the variational expression $\vect{f}^e = \int_0^L \vect{N}\transpose p\,\dd x$
+used in \cref{ch:weighted_residuals} and in the PVW derivation of
+\cref{sec:pvw} — direct mechanics, weak form, and PVW all agree.
+
+\begin{remark}
+For constant $EA$ and uniform $p_0$, the enriched element with $u_p(x)$ is
+\emph{nodally exact}: even a single element gives the exact analytical
+displacement and stress at the nodes. Refining the mesh only improves the
+resolution of the smooth interior fields, not the nodal accuracy.
+\end{remark}
+
+\section{Global Assembly}
+
+Consider a bar discretized into $n$ elements with $n+1$ nodes. Each element
+connects local nodes 1--2 to global nodes $i$-$(i+1)$. The global stiffness
+matrix $\stiff \in \mathbb{R}^{(n+1)\times(n+1)}$ is assembled by the
+\emph{direct stiffness method}:
+\begin{equation}
+    \stiff = \sum_{e=1}^{n} \matr{L}_e\transpose \matr{k}^e \matr{L}_e
+    \label{eq:assembly}
+\end{equation}
+where $\matr{L}_e$ is the Boolean connectivity matrix that maps local to global DOFs.
+
+In practice, assembly is performed by adding element stiffness entries at the
+appropriate global positions:
+\begin{equation}
+    K_{ij} \mathrel{+}= k^e_{rs}, \quad \text{where } i = \text{global}(r),\; j = \text{global}(s)
+\end{equation}
+
+\section{Boundary Conditions}
+
+\subsection{Homogeneous Essential BC (fixed node)}
+Zero out the row and column corresponding to the prescribed DOF, and set the
+diagonal to 1:
+\begin{equation}
+    K_{ii} = 1, \quad K_{ij} = K_{ji} = 0 \;\forall j \neq i, \quad f_i = 0
+\end{equation}
+
+\subsection{Penalty Method}
+Add a large number $\alpha \gg \max(K_{ii})$ to the diagonal:
+\begin{equation}
+    K_{ii} \mathrel{+}= \alpha, \quad f_i \mathrel{+}= \alpha \bar{u}_i
+\end{equation}
+where $\bar{u}_i$ is the prescribed displacement.
+
+\section{Worked Example: Three-Element Bar}
+
+\begin{example}[Three-element bar under tip load]
+\label{ex:3bar}
+
+Consider a stepped bar of total length $L = 0.9$ m fixed at $x=0$,
+with a point load $F = 10{,}000$ N at $x = L$. Three equal elements,
+$EA = 70 \times 10^6$ N.
+
+\medskip
+\noindent\textbf{Element stiffness:}
+\[
+    \matr{k}^e = \frac{EA}{L/3} = \frac{70\times10^6}{0.3}
+    \begin{bmatrix}1&-1\\-1&1\end{bmatrix}
+    = 2.\overline{3}\times10^8
+    \begin{bmatrix}1&-1\\-1&1\end{bmatrix}
+\]
+
+\noindent\textbf{Global system} (4 DOFs, node 1 fixed):
+\[
+    \stiff = 2.\overline{3}\times10^8
+    \begin{bmatrix}
+         1 & -1 &  0 &  0 \\
+        -1 &  2 & -1 &  0 \\
+         0 & -1 &  2 & -1 \\
+         0 &  0 & -1 &  1
+    \end{bmatrix},
+    \qquad \vect{f} = \begin{bmatrix}0\\0\\0\\10000\end{bmatrix}
+\]
+
+\noindent\textbf{Applying BC} $u_1 = 0$ (strike row/column 1):
+\[
+    \vect{u} = \stiff\inv \vect{f}
+    \implies u_4 = \frac{FL}{EA} = 1.286 \times 10^{-4}\ \text{m}
+\]
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>=Stealth, scale=1.0]
+  %% Fixed wall
+  \fill[pattern=north east lines] (-0.35,-0.35) rectangle (0,0.35);
+  \draw[thick] (0,-0.35) -- (0,0.35);
+  %% Three bar segments (each width 2.8)
+  \fill[gray!20] (0,-0.18) rectangle (2.8,0.18);
+  \draw[thick] (0,-0.18) rectangle (2.8,0.18);
+  \fill[gray!20] (2.8,-0.18) rectangle (5.6,0.18);
+  \draw[thick] (2.8,-0.18) rectangle (5.6,0.18);
+  \fill[gray!20] (5.6,-0.18) rectangle (8.4,0.18);
+  \draw[thick] (5.6,-0.18) rectangle (8.4,0.18);
+  %% Element labels
+  \node[above=3pt] at (1.4,0.18) {\small $e=1$};
+  \node[above=3pt] at (4.2,0.18) {\small $e=2$};
+  \node[above=3pt] at (7.0,0.18) {\small $e=3$};
+  %% Nodes
+  \foreach \x/\n in {0/1,2.8/2,5.6/3,8.4/4}{
+    \filldraw (\x,0) circle (3.5pt);
+    \node[below=5pt] at (\x,0) {\small $\n$};
+  }
+  %% Le dimensions
+  \foreach \s in {0,2.8,5.6}{
+    \draw[<->] (\s,-0.65) -- (\s+2.8,-0.65) node[midway,below] {\small $L_e$};
+  }
+  %% Tip force
+  \draw[->,very thick,red!70!black] (9.8,0) -- (8.4,0);
+  \node[right] at (9.8,0) {$F$};
+\end{tikzpicture}
+\caption{Three-element bar discretization: fixed at node 1, tip load $F$ at node 4.}
+\label{fig:3bar}
+\end{figure}
+
+\noindent See \Cref{lst:bar1d} in the Appendix for the MATLAB implementation.
+\end{example}
+
+\section{Worked Example: Stepped Bar with Combined Loading}
+\label{sec:stepped_bar}
+
+\begin{example}[Stepped axial bar with distributed and concentrated loads]
+\label{ex:stepped_bar}
+
+A cantilever stepped bar comprises two prismatic segments. Element~1 has
+length $L_1 = 500$~mm and area $A = 225$~mm$^2$; element~2 has length
+$L_2 = 400$~mm and area $2A = 450$~mm$^2$. The Young's modulus is
+$E = 210{,}000$~MPa. A uniform distributed axial load $p_1 = -4$~N/mm acts on
+element~1 (negative = directed toward the fixed support), and concentrated
+forces of $+6$~kN at node~2 and $-15$~kN at node~3 are applied
+(\cref{fig:stepped_bar}).
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>=Stealth, x=1cm, y=1cm,
+    distload/.style={->,thick,blue!75!black},
+    concforce/.style={->,ultra thick,red!75!black},
+    dim/.style={<->,thin}]
+  %% Fixed wall (hatched)
+  \fill[pattern=north east lines, pattern color=gray!70] (-0.40,-0.65) rectangle (0,0.65);
+  \draw[thick] (0,-0.65) -- (0,0.65);
+  %% Element 1 (thinner) from x=0 to x=5 (represents 500 mm)
+  \fill[gray!22] (0,-0.18) rectangle (5,0.18);
+  \draw[thick] (0,-0.18) rectangle (5,0.18);
+  \node[below=2pt] at (2.5,-0.18) {\small $A$};
+  %% Element 2 (thicker) from x=5 to x=9 (represents 400 mm)
+  \fill[gray!22] (5,-0.32) rectangle (9,0.32);
+  \draw[thick] (5,-0.32) rectangle (9,0.32);
+  \node[below=2pt] at (7,-0.32) {\small $2A$};
+  %% Distributed load arrows over element 1 (point LEFT)
+  \foreach \x in {0.6,1.3,2.0,2.7,3.4,4.1,4.8}
+    \draw[distload] (\x,0.65) -- ++(-0.55,0);
+  \node[blue!75!black,above] at (2.5,0.80) {$4$~kN/m};
+  %% Concentrated 6 kN at node 2 (points RIGHT)
+  \draw[concforce] (4.55,0.55) -- (5.55,0.55);
+  \node[red!75!black,above] at (5.05,0.65) {$6$~kN};
+  %% Concentrated 15 kN at node 3 (points LEFT — applied at the free end)
+  \draw[concforce] (10.10,0) -- (9.10,0);
+  \node[red!75!black,above] at (9.60,0.05) {$15$~kN};
+  %% Nodes
+  \filldraw (0,0) circle (3pt);
+  \filldraw (5,0) circle (3pt);
+  \filldraw (9,0) circle (3pt);
+  %% Node numbering
+  \node at (-0.30,-0.92) {\small\bfseries 1};
+  \node at (5.00,-0.92) {\small\bfseries 2};
+  \node at (9.30,-0.92) {\small\bfseries 3};
+  %% Length dimensions
+  \draw[dim] (0,-1.45) -- (5,-1.45);
+  \node[fill=white,inner sep=1pt] at (2.5,-1.45) {\small $500$~mm};
+  \draw[dim] (5,-1.45) -- (9,-1.45);
+  \node[fill=white,inner sep=1pt] at (7,-1.45) {\small $400$~mm};
+  %% x-axis
+  \draw[->,thin] (-0.6,-2.00) -- (10.7,-2.00) node[right] {$x$};
+\end{tikzpicture}
+\caption{Stepped bar problem: distributed axial load (blue) on element 1 and concentrated forces (red) at nodes 2 and 3.}
+\label{fig:stepped_bar}
+\end{figure}
+
+\paragraph{Discretization.}
+Two linear bar elements connect three nodes located at $x_1 = 0$, $x_2 = 500$,
+$x_3 = 900$~mm. Each node carries one axial DOF, giving $n_{\mathrm{dof}}=3$.
+
+\begin{center}
+\small
+\begin{tabular}{@{}cc @{\hspace{3em}} ccc@{}}
+\toprule
+\multicolumn{2}{l}{\textbf{Node coordinates}} & \multicolumn{3}{l}{\textbf{Connectivity}} \\
+\cmidrule(r){1-2}\cmidrule(l){3-5}
+Node & $x$ [mm] & Element & Nodes & DOFs \\
+\midrule
+1 & 0   & 1 & 1, 2 & 1, 2 \\
+2 & 500 & 2 & 2, 3 & 2, 3 \\
+3 & 900 &   &      &      \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Element matrices.}
+Using the direct stiffness from \cref{eq:bar_stiffness},
+\[
+   \matr{k}^{(1)} = \frac{E A}{L_1}\!\begin{bmatrix} 1 & -1 \\ -1 & 1 \end{bmatrix}
+   = 94{,}500\!\begin{bmatrix} 1 & -1 \\ -1 & 1 \end{bmatrix}\,\tfrac{\text{N}}{\text{mm}},
+   \quad
+   \matr{k}^{(2)} = \frac{E(2A)}{L_2}\!\begin{bmatrix} 1 & -1 \\ -1 & 1 \end{bmatrix}
+   = 236{,}250\!\begin{bmatrix} 1 & -1 \\ -1 & 1 \end{bmatrix}\,\tfrac{\text{N}}{\text{mm}} .
+\]
+The consistent distributed-load vector for element~1, from \cref{eq:bar_load},
+is
+\[
+   \vect{f}_p^{(1)} = \tfrac{p_1 L_1}{2}\!\begin{bmatrix} 1 \\ 1 \end{bmatrix}
+       = \begin{bmatrix} -1000 \\ -1000 \end{bmatrix}\,\text{N},
+   \qquad
+   \vect{f}_p^{(2)} = \begin{bmatrix} 0 \\ 0 \end{bmatrix}\,\text{N} .
+\]
+
+\paragraph{Graphical assembly of the global stiffness matrix.}
+Each $2{\times}2$ element matrix is added into the $3{\times}3$ global matrix
+at the rows and columns corresponding to its nodes
+(\cref{fig:stepped_bar_K_assembly}): element~1 occupies the top-left block
+(rows/columns 1 and 2), element~2 the bottom-right block (rows/columns 2 and
+3). The shared entry at row/column 2 receives contributions from both
+elements.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    cell/.style={draw=gray!60, minimum width=15mm, minimum height=8mm,
+                 inner sep=0pt, anchor=center, font=\scriptsize, align=center},
+    e1/.style={cell, fill=blue!12},
+    e2/.style={cell, fill=red!12},
+    e12/.style={cell, fill=violet!22},
+    zc/.style={cell, fill=gray!7, text=gray!55},
+    title/.style={font=\bfseries\footnotesize, anchor=south}]
+  %% Matrix 1: element 1 contribution
+  \node[title] at (1.5,1.7) {Element~1 contribution};
+  \node[e1] at (0.0,0.85) {$94500$};
+  \node[e1] at (1.5,0.85) {$-94500$};
+  \node[zc]  at (3.0,0.85) {$0$};
+  \node[e1] at (0.0,0.00) {$-94500$};
+  \node[e1] at (1.5,0.00) {$94500$};
+  \node[zc]  at (3.0,0.00) {$0$};
+  \node[zc]  at (0.0,-0.85) {$0$};
+  \node[zc]  at (1.5,-0.85) {$0$};
+  \node[zc]  at (3.0,-0.85) {$0$};
+  %% Plus
+  \node[font=\Large\bfseries] at (4.0,0) {$+$};
+  %% Matrix 2: element 2 contribution
+  \node[title] at (6.5,1.7) {Element~2 contribution};
+  \node[zc]  at (5.0,0.85) {$0$};
+  \node[zc]  at (6.5,0.85) {$0$};
+  \node[zc]  at (8.0,0.85) {$0$};
+  \node[zc]  at (5.0,0.00) {$0$};
+  \node[e2] at (6.5,0.00) {$236250$};
+  \node[e2] at (8.0,0.00) {$-236250$};
+  \node[zc]  at (5.0,-0.85) {$0$};
+  \node[e2] at (6.5,-0.85) {$-236250$};
+  \node[e2] at (8.0,-0.85) {$236250$};
+  %% Equals
+  \node[font=\Large\bfseries] at (9.0,0) {$=$};
+  %% Matrix 3: assembled global K
+  \node[title] at (11.5,1.7) {Global $\stiff$};
+  \node[e1]  at (10.0,0.85) {$94500$};
+  \node[e1]  at (11.5,0.85) {$-94500$};
+  \node[zc]   at (13.0,0.85) {$0$};
+  \node[e1]  at (10.0,0.00) {$-94500$};
+  \node[e12] at (11.5,0.00) {$330750$};
+  \node[e2]  at (13.0,0.00) {$-236250$};
+  \node[zc]   at (10.0,-0.85) {$0$};
+  \node[e2]  at (11.5,-0.85) {$-236250$};
+  \node[e2]  at (13.0,-0.85) {$236250$};
+\end{tikzpicture}
+\caption{Graphical assembly of the global stiffness matrix. Blue cells receive contributions from element~1, red cells from element~2, and the violet cell at row/column~2 receives contributions from both, giving $94{,}500 + 236{,}250 = 330{,}750$.}
+\label{fig:stepped_bar_K_assembly}
+\end{figure}
+
+\paragraph{Force vector assembly.}
+The distributed-load contribution from element~1 lands at DOFs 1 and 2; the
+concentrated forces are placed directly at their respective nodes:
+\[
+   \vect{f}_p = \begin{bmatrix} -1000 \\ -1000 \\ 0 \end{bmatrix},\quad
+   \vect{f}_c = \begin{bmatrix} 0 \\ 6000 \\ -15000 \end{bmatrix},\quad
+   \vect{f} = \vect{f}_p + \vect{f}_c
+            = \begin{bmatrix} -1000 \\ 5000 \\ -15000 \end{bmatrix}\,\text{N} .
+\]
+
+\paragraph{Boundary conditions and reduced system.}
+Node~1 is fixed, $u_1 = 0$. The free-DOF set is $\{2,3\}$. Striking the first
+row and column,
+\[
+   \underbrace{\begin{bmatrix} 330{,}750 & -236{,}250 \\ -236{,}250 & 236{,}250 \end{bmatrix}}_{\stiff_{ff}}
+   \begin{bmatrix} u_2 \\ u_3 \end{bmatrix}
+   =
+   \underbrace{\begin{bmatrix} 5{,}000 \\ -15{,}000 \end{bmatrix}}_{\vect{f}_f} .
+\]
+Solving,
+\[
+   u_2 = -\tfrac{20}{189} \approx -0.1058 \;\text{mm},
+   \qquad
+   u_3 = -\tfrac{32}{189} \approx -0.1693 \;\text{mm}.
+\]
+
+\paragraph{Reaction at the fixed support.}
+The reaction follows from the first row of the unreduced system:
+\[
+   R_1 = \stiff_{1,*}\,\vect{u} - f_1
+       = (-94{,}500)(-\tfrac{20}{189}) - (-1000) = +11{,}000 \;\text{N},
+\]
+which balances the resultant of all applied axial forces:
+$-(-2000) - 6000 - (-15000) = +11{,}000$~N.
+
+\paragraph{Internal displacement and force fields.}
+Inside each element the displacement follows the enriched trial
+\cref{eq:bar_disp_enriched}, evaluated with the nodal solution and the
+particular solution \cref{eq:up_uniform}. Differentiating yields
+$N(x)$ from \cref{eq:bar_force_enriched}. The resulting curves
+(\cref{fig:stepped_bar_u,fig:stepped_bar_N}) show the parabolic curvature in
+element~1 caused by $p_1 \neq 0$, the linear field in element~2, and the
+$+6$~kN jump in $N(x)$ at $x = 500$~mm corresponding to the concentrated load
+applied there.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/stepped_bar_displacement.pdf}
+\caption{Displacement field $u(x)$ along the stepped bar.}
+\label{fig:stepped_bar_u}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/stepped_bar_internal_force.pdf}
+\caption{Internal axial force $N(x)$ along the stepped bar. The discontinuity at $x = 500$~mm corresponds to the $+6$~kN concentrated force applied at node~2.}
+\label{fig:stepped_bar_N}
+\end{figure}
+
+\noindent See \Cref{lst:stepped_bar} in the Appendix for the full MATLAB
+implementation that produced these plots.
+\end{example}
+
+\section{Principle of Virtual Work for the Axial Bar}
+\label{sec:pvw}
+
+The direct formulation of \cref{sec:direct_formulation} and the worked
+examples above gave the bar element stiffness and load vector from physical
+equilibrium. The principle of virtual work (PVW) provides an alternative,
+energy-based statement of equilibrium that reproduces the same results and
+generalizes immediately to non-uniform loading, variable cross-section, and
+higher-order elements. PVW is the variational foundation on which the entire
+finite element method rests.
+
+\subsection{Statement of the Principle}
+
+\begin{importantbox}
+\textbf{Principle of Virtual Work:}
+For a bar in static equilibrium, and for any \emph{kinematically admissible}
+virtual displacement field $\delta u(x)$,
+\begin{equation}
+    \delta W_{\mathrm{int}} = \delta W_{\mathrm{ext}} ,
+    \label{eq:pvw_statement}
+\end{equation}
+with internal and external virtual work
+\[
+   \delta W_{\mathrm{int}}
+     = \int_0^L N(x)\,\delta\varepsilon(x)\,\dd x
+     = \int_0^L EA\,\frac{\dd u}{\dd x}\,\frac{\dd \delta u}{\dd x}\,\dd x ,
+\]
+\[
+   \delta W_{\mathrm{ext}}
+     = \int_0^L p(x)\,\delta u(x)\,\dd x
+     + \sum_i F_i\,\delta u(x_i) .
+\]
+A virtual displacement is \emph{kinematically admissible} if it satisfies the
+essential boundary conditions: $\delta u = 0$ wherever $u$ is prescribed.
+\end{importantbox}
+
+The virtual displacement $\delta u(x)$ is an arbitrary, infinitesimal
+perturbation. It need not satisfy equilibrium or any natural boundary
+conditions — its sole role is to test the equilibrium of the actual
+displacement field $u(x)$.
+
+\subsection{Derivation from Equilibrium}
+
+Begin with the local equilibrium equation derived in
+\cref{ch:weighted_residuals}:
+\begin{equation}
+    \frac{\dd N}{\dd x} + p(x) = 0, \qquad 0 < x < L .
+    \label{eq:pvw_equilibrium}
+\end{equation}
+Multiply both sides by an arbitrary virtual displacement $\delta u(x)$ and
+integrate over the bar:
+\begin{equation}
+    \int_0^L \left( \frac{\dd N}{\dd x} + p \right) \delta u\,\dd x = 0 .
+    \label{eq:pvw_integral}
+\end{equation}
+Integration by parts on the first term gives
+\begin{equation}
+    \int_0^L \frac{\dd N}{\dd x}\,\delta u\,\dd x
+    = \big[N(x)\,\delta u(x)\big]_0^L
+    - \int_0^L N(x)\,\frac{\dd \delta u}{\dd x}\,\dd x .
+    \label{eq:pvw_ibp}
+\end{equation}
+Substituting back into \cref{eq:pvw_integral} and rearranging,
+\begin{equation}
+    \int_0^L N\,\frac{\dd \delta u}{\dd x}\,\dd x
+    = \big[N\,\delta u\big]_0^L + \int_0^L p\,\delta u\,\dd x .
+    \label{eq:pvw_weak}
+\end{equation}
+The boundary term vanishes wherever the displacement is prescribed (kinematic
+admissibility forces $\delta u = 0$ there) and reduces to $F_i\,\delta u(x_i)$
+at any free end with a concentrated force $F_i$ (because $N$ at that end
+equals the applied force). Substituting the constitutive law
+$N = EA\,\dd u/\dd x$ and $\delta\varepsilon = \dd \delta u/\dd x$ on the
+left, equation \cref{eq:pvw_weak} becomes
+\begin{equation}
+    \int_0^L EA\,\frac{\dd u}{\dd x}\,\frac{\dd \delta u}{\dd x}\,\dd x
+    \;=\;
+    \int_0^L p\,\delta u\,\dd x \;+\; \sum_i F_i\,\delta u(x_i) ,
+    \label{eq:pvw_final}
+\end{equation}
+which is exactly the PVW statement \cref{eq:pvw_statement}.
+
+\begin{remark}
+Equation \cref{eq:pvw_final} is the \emph{weak form} of the bar equilibrium
+equation. The strong form $-EA\,u'' = p$ requires twice-differentiable trial
+functions; the weak form requires only first derivatives. This relaxation
+makes the weak form well-suited to piecewise-polynomial finite element
+approximations whose derivatives may be discontinuous between elements.
+\end{remark}
+
+\subsection{Recovery of the Bar Stiffness Matrix}
+
+To reproduce the element stiffness derived in \cref{sec:direct_formulation},
+substitute the linear interpolation
+\begin{equation}
+    u(x) = N_1(x)\,u_1 + N_2(x)\,u_2,
+    \qquad
+    \delta u(x) = N_1(x)\,\delta u_1 + N_2(x)\,\delta u_2 ,
+\end{equation}
+with strain-displacement matrix $\matr{B} = \tfrac{1}{L}[\,-1,\;1\,]$, into
+the left-hand side of \cref{eq:pvw_final}:
+\[
+    \delta \vect{u}^{e\transpose}\!
+    \left[\int_0^L EA\,\matr{B}\transpose \matr{B}\,\dd x\right]
+    \!\vect{u}^e
+    = \delta \vect{u}^{e\transpose}\,\matr{k}^e\,\vect{u}^e ,
+\]
+giving
+\[
+    \matr{k}^e
+    = \int_0^L EA\,\matr{B}\transpose \matr{B}\,\dd x
+    = \frac{EA}{L}\begin{bmatrix} 1 & -1 \\ -1 & 1 \end{bmatrix} ,
+\]
+identical to \cref{eq:bar_stiffness}. The right-hand side likewise produces
+the consistent load vector $\vect{f}^e = \int_0^L \vect{N}\transpose p\,\dd x +
+(\text{nodal forces})$. Direct mechanics, weak form, and PVW all give the same
+element equations.
+
+\subsection{Worked Example: Verification of PVW on the Stepped Bar}
+\label{sec:pvw_verification}
+
+\begin{example}[Numerical verification of $\delta W_{\mathrm{int}} = \delta W_{\mathrm{ext}}$]
+\label{ex:pvw_verification}
+
+To illustrate that PVW holds for a real loaded bar in equilibrium, we
+return to the stepped bar of \cref{ex:stepped_bar} (already solved
+exactly). Recall the actual nodal solution
+\[
+   u_1 = 0,\quad
+   u_2 = -\tfrac{20}{189} \approx -0.10582 \;\text{mm},\quad
+   u_3 = -\tfrac{32}{189} \approx -0.16931 \;\text{mm},
+\]
+the support reaction $R_1 = +11{,}000$~N, and the internal axial force per
+element from \cref{eq:bar_force_enriched},
+\begin{align*}
+   N^{(1)}(x_1) &= \tfrac{EA_1(u_2-u_1)}{L_1} + \tfrac{p_1(L_1-2x_1)}{2}
+                = -10{,}000 + (-2)(500-2x_1)
+                = -11{,}000 + 4x_1 \;\;[\text{N}], \\
+   N^{(2)}(x_2) &= \tfrac{EA_2(u_3-u_2)}{L_2}
+                = -15{,}000 \;\;[\text{N}] \quad (\text{constant}),
+\end{align*}
+where $x_1 \in [0,500]$ and $x_2 \in [0,400]$ are local element coordinates.
+
+We now choose two different kinematically admissible virtual displacements
+$\delta u(x)$ (each must satisfy $\delta u(0)=0$) and verify the equality
+$\delta W_{\mathrm{int}} = \delta W_{\mathrm{ext}}$ by direct calculation
+of both sides.
+
+\paragraph{Case A: $(\delta u_1,\delta u_2,\delta u_3) = (0,1,0)$ ``tent''.}
+
+Piecewise linear with the apex at node 2:
+\[
+   \delta u^{(1)}(x_1) = \frac{x_1}{L_1} = \frac{x_1}{500}, \qquad
+   \delta u^{(2)}(x_2) = 1 - \frac{x_2}{L_2} = 1 - \frac{x_2}{400} .
+\]
+The corresponding virtual strains are constant on each element:
+\[
+   \delta\varepsilon^{(1)} = +\tfrac{1}{500}, \qquad
+   \delta\varepsilon^{(2)} = -\tfrac{1}{400} .
+\]
+
+\noindent\emph{Internal virtual work.}
+For an element with constant $EA$ and uniform $p$, $\int_0^{L} N(x)\,\dd x =
+EA(u_b - u_a)$ (the distributed-load contribution integrates to zero). Hence
+\begin{align*}
+   \delta W_{\mathrm{int}}^{(1)}
+   &= \delta\varepsilon^{(1)}\!\int_0^{L_1}\! N^{(1)}\,\dd x_1
+    = \tfrac{1}{500}\,EA_1(u_2-u_1)
+    = \tfrac{1}{500}\,(-5{,}000{,}000) = -10{,}000\;\text{N\,mm}, \\
+   \delta W_{\mathrm{int}}^{(2)}
+   &= \delta\varepsilon^{(2)}\!\int_0^{L_2}\! N^{(2)}\,\dd x_2
+    = -\tfrac{1}{400}\,EA_2(u_3-u_2)
+    = -\tfrac{1}{400}\,(-6{,}000{,}000) = +15{,}000\;\text{N\,mm}, \\
+   \delta W_{\mathrm{int}}
+   &= -10{,}000 + 15{,}000 = +5{,}000 \;\text{N\,mm}.
+\end{align*}
+
+\noindent\emph{External virtual work.}
+The reaction at node~1 does no virtual work because $\delta u_1 = 0$.
+\begin{align*}
+   \int_0^{L_1}\! p_1\,\delta u^{(1)}\,\dd x_1
+   &= \int_0^{500}\!(-4)\!\left(\tfrac{x_1}{500}\right)\!\dd x_1
+    = -1{,}000\;\text{N\,mm}, \\
+   F_2\,\delta u_2 + F_3\,\delta u_3
+   &= (6{,}000)(1) + (-15{,}000)(0) = +6{,}000\;\text{N\,mm}, \\
+   \delta W_{\mathrm{ext}}
+   &= -1{,}000 + 6{,}000 = +5{,}000 \;\text{N\,mm}.
+\end{align*}
+
+\noindent\textbf{Result:} $\delta W_{\mathrm{int}} = \delta W_{\mathrm{ext}} = +5{,}000$~N\,mm. \hfill\checkmark
+
+\paragraph{Case B: $(\delta u_1,\delta u_2,\delta u_3) = (0,1,1)$ ``ramp''.}
+
+Linear in element~1, constant in element~2:
+\[
+   \delta u^{(1)} = \frac{x_1}{500},\qquad \delta u^{(2)} = 1,
+   \qquad
+   \delta\varepsilon^{(1)} = \tfrac{1}{500},\qquad \delta\varepsilon^{(2)} = 0 .
+\]
+\begin{align*}
+   \delta W_{\mathrm{int}}
+   &= \tfrac{1}{500}(-5{,}000{,}000) + 0 = -10{,}000\;\text{N\,mm}, \\
+   \delta W_{\mathrm{ext}}
+   &= \underbrace{-1{,}000}_{\text{distributed load}}
+    + \underbrace{(6{,}000)(1) + (-15{,}000)(1)}_{\text{concentrated forces}}
+    = -1{,}000 - 9{,}000 = -10{,}000\;\text{N\,mm}.
+\end{align*}
+\textbf{Result:} $\delta W_{\mathrm{int}} = \delta W_{\mathrm{ext}} = -10{,}000$~N\,mm. \hfill\checkmark
+
+\medskip
+
+The two virtual displacements above coincide with the basis used in the FEM
+discretization (piecewise linear, one unit value at a free DOF, zero
+elsewhere). Choosing $\delta u$ as the $i$-th basis function reproduces
+exactly the $i$-th row of the reduced FEM equations $\stiff_{ff}\vect{u}_f =
+\vect{f}_f$. Indeed, $+5{,}000$ and $-10{,}000$ are the assembled effective
+forces at DOF~2 and DOF~$2{+}3$ for these two perturbations.
+
+\paragraph{Beyond piecewise linear.}
+PVW holds for any kinematically admissible virtual displacement, not just
+those built from the FEM basis. The MATLAB script
+\Cref{lst:pvw_verification} also evaluates a smooth quadratic
+$\delta u(x) = (x/900)^2$ and reports
+\[
+   \delta W_{\mathrm{int}} = \delta W_{\mathrm{ext}} \approx -13{,}353.91 \;\text{N\,mm}
+   \qquad (|\Delta| < 10^{-11}\;\text{N\,mm}) ,
+\]
+confirming that the work balance is independent of the chosen test field.
+
+\begin{remark}
+This verification is more than a numerical check — it is the defining property
+of the equilibrium configuration. Of all kinematically admissible
+displacement fields, the actual $u(x)$ is the unique one for which the work
+balance holds for \emph{every} admissible perturbation. The finite element
+method exploits this property: by enforcing PVW with the basis functions of
+the chosen mesh as test fields, it produces the discrete equations
+$\stiff\vect{u} = \vect{f}$ whose solution is the best approximation to the
+true equilibrium within that finite-dimensional space.
+\end{remark}
+
+\end{example}
+
+\section{Natural Coordinates and Isoparametric Mapping}
+
+For generality, it is convenient to define a local (natural) coordinate
+$\xi \in [-1, 1]$ related to $x$ by:
+\begin{equation}
+    x = \frac{1-\xi}{2}\, x_1 + \frac{1+\xi}{2}\, x_2, \qquad
+    \dd x = \frac{L}{2}\dd\xi
+    \label{eq:isomap_1d}
+\end{equation}
+The shape functions in natural coordinates become:
+\begin{equation}
+    N_1(\xi) = \frac{1-\xi}{2}, \qquad N_2(\xi) = \frac{1+\xi}{2}
+\end{equation}
+This mapping is the foundation of the isoparametric concept used in
+\Cref{ch:2d_continuum}.

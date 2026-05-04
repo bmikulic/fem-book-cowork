@@ -1,0 +1,117 @@
+\chapter{Introduction to the Finite Element Method}
+\label{ch:intro}
+
+\section{Purpose of the Finite Element Method}
+
+Many engineering problems are governed by differential equations together with
+boundary conditions. For simple geometries and idealized loading, these
+equations may have closed-form analytical solutions. In practical design,
+however, the geometry, material behavior, loading, and supports are often too
+complex for an exact solution.
+
+The Finite Element Method (FEM) is a systematic numerical method for replacing
+a continuous problem by a finite set of algebraic equations. Instead of solving
+for an unknown field at infinitely many points, FEM solves for a finite number
+of unknowns at selected points called nodes. The solution between nodes is then
+interpolated by simple functions.
+
+FEM is widely used in structural, mechanical, civil, aerospace, biomedical, and
+multiphysics engineering because it combines physical modeling with a practical
+computational procedure.
+
+\section{Historical Background}
+
+The modern finite element method developed in the 1950s from matrix structural
+analysis and the need to solve complex aerospace structures. Turner, Clough,
+Martin, and Topp~\cite{zienkiewicz2005fem} published an important early paper
+in 1956 describing the stiffness approach for plane stress analysis. The term
+\emph{finite element} was introduced by Clough in 1960.
+
+Since then, FEM has grown into one of the central tools of computational
+engineering. It is now implemented in commercial and open-source software for
+linear and nonlinear statics, heat transfer, dynamics, fluid flow, and coupled
+field problems.
+
+\section{Basic Idea}
+
+The central idea of FEM is discretization. A domain is divided into small,
+simple parts called \textbf{elements}. Elements meet at \textbf{nodes}, where the
+primary unknowns are stored. Within each element, the unknown field is
+approximated using interpolation functions called \textbf{shape functions}.
+
+For a structural displacement problem, the final algebraic system commonly has
+the form
+\begin{equation}
+    \stiff \, \vect{u} = \vect{f}
+    \label{eq:global_system}
+\end{equation}
+where $\stiff$ is the global stiffness matrix, $\vect{u}$ is the vector of
+unknown nodal displacements, and $\vect{f}$ is the global load vector.
+
+Although \cref{eq:global_system} looks compact, it represents the combined
+effect of element behavior, material properties, geometry, loading, and boundary
+conditions. Much of FEM is the careful construction of this system.
+
+\section{General FEM Procedure}
+
+A typical finite element analysis follows these steps:
+
+\begin{enumerate}
+    \item \textbf{Define the physical problem:} Identify the domain, material
+    properties, loads, and boundary conditions.
+    \item \textbf{Choose the element type:} Select elements appropriate for the
+    physics and expected behavior of the solution.
+    \item \textbf{Discretize the domain:} Divide the domain into a mesh of
+    finite elements connected at nodes.
+    \item \textbf{Form element equations:} Derive the element stiffness matrix
+    and element load vector.
+    \item \textbf{Assemble the global system:} Combine all element equations
+    into the global matrix equation.
+    \item \textbf{Apply boundary conditions:} Enforce prescribed values and
+    include natural loading terms.
+    \item \textbf{Solve the algebraic system:} Compute the unknown nodal
+    quantities.
+    \item \textbf{Post-process the results:} Recover derived quantities such as
+    strains, stresses, reactions, or internal forces.
+\end{enumerate}
+
+\section{Role of Approximation}
+
+FEM is an approximate method. The accuracy of the result depends on the element
+formulation, mesh density, interpolation order, numerical integration, and the
+quality of the physical model. A refined mesh or higher-order interpolation can
+improve accuracy, but it also increases computational cost.
+
+Good finite element modeling therefore requires engineering judgment. The goal
+is not only to obtain numbers, but to obtain numbers that are meaningful for the
+problem being studied.
+
+\section{Organization of This Book}
+
+This book begins with weighted residual methods because they provide a clear
+mathematical bridge from differential equations to finite element equations. It
+then develops one-dimensional elements, truss and beam elements, two-dimensional
+continuum elements, and basic structural dynamics.
+
+Each chapter emphasizes the connection between theory, element formulation, and
+implementation. MATLAB examples in the appendix show how the main algorithms
+can be programmed directly.
+
+\section{Notation Used in This Book}
+
+Throughout this book, we use the following conventions:
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+    \toprule
+    Symbol & Meaning & Example \\
+    \midrule
+    $\vect{u}$ & Column vector (bold italic) & displacement vector \\
+    $\matr{K}$ & Matrix (bold italic) & stiffness matrix \\
+    $(\cdot)\transpose$ & Transpose & $\matr{K}\transpose$ \\
+    $(\cdot)\inv$ & Inverse & $\matr{K}\inv$ \\
+    $\dd$ & Differential operator & $\dd x$, $\dd V$ \\
+    $\delta$ & Virtual quantity & $\delta u$, $\delta W$ \\
+    \bottomrule
+\end{tabular}
+\end{center}

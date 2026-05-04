@@ -1,0 +1,227 @@
+\chapter{Structural Dynamics and Vibration}
+\label{ch:dynamics}
+
+\section{Equations of Motion}
+
+When inertia and damping effects are included, the FEM system of equations becomes:
+\begin{equation}
+    \mass\,\ddot{\vect{u}} + \damp\,\dot{\vect{u}} + \stiff\,\vect{u} = \vect{f}(t)
+    \label{eq:eom}
+\end{equation}
+where $\mass$ is the global \emph{mass matrix}, $\damp$ is the \emph{damping matrix},
+$\stiff$ is the stiffness matrix, and $\vect{f}(t)$ is the time-varying external force.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>=Stealth, scale=1.0,
+    spring/.style={decorate, decoration={zigzag, segment length=5pt, amplitude=4pt}},
+    damper/.style={thick}]
+  %% Fixed wall (left)
+  \fill[pattern=north east lines] (-0.3,-0.7) rectangle (0,0.7);
+  \draw[thick] (0,-0.7) -- (0,0.7);
+  %% Spring k1 (upper track)
+  \draw[spring] (0,0.3) -- (2.4,0.3);
+  \node[above=2pt] at (1.2,0.38) {$k_1$};
+  %% Damper c1 (lower track): line -- box -- line
+  \draw[damper] (0,-0.3) -- (0.7,-0.3);
+  \draw[damper] (0.7,-0.48) rectangle (1.6,-0.12);
+  \draw[damper] (1.6,-0.3) -- (2.4,-0.3);
+  \node[below=2pt] at (1.2,-0.48) {$c_1$};
+  %% Mass m1
+  \fill[gray!35] (2.4,-0.55) rectangle (3.5,0.55);
+  \draw[thick] (2.4,-0.55) rectangle (3.5,0.55);
+  \node at (2.95,0) {$m_1$};
+  %% u1 arrow
+  \draw[->,thick,red!70!black] (2.95,0.8) -- (4.1,0.8) node[right] {$u_1(t)$};
+  %% Spring k2 (upper track)
+  \draw[spring] (3.5,0.3) -- (5.9,0.3);
+  \node[above=2pt] at (4.7,0.38) {$k_2$};
+  %% Damper c2 (lower track)
+  \draw[damper] (3.5,-0.3) -- (4.2,-0.3);
+  \draw[damper] (4.2,-0.48) rectangle (5.1,-0.12);
+  \draw[damper] (5.1,-0.3) -- (5.9,-0.3);
+  \node[below=2pt] at (4.7,-0.48) {$c_2$};
+  %% Mass m2
+  \fill[gray!35] (5.9,-0.55) rectangle (7.0,0.55);
+  \draw[thick] (5.9,-0.55) rectangle (7.0,0.55);
+  \node at (6.45,0) {$m_2$};
+  %% u2 arrow
+  \draw[->,thick,red!70!black] (6.45,0.8) -- (7.6,0.8) node[right] {$u_2(t)$};
+  %% Ground under masses
+  \foreach \x in {2.4,3.5,5.9,7.0}{ \draw[dashed,gray!60] (\x,-0.55) -- (\x,-0.9); }
+  \fill[pattern=north east lines] (2.2,-1.05) rectangle (7.2,-0.9);
+  \draw (2.2,-0.9) -- (7.2,-0.9);
+\end{tikzpicture}
+\caption{Two-DOF mass-spring-damper system corresponding to \cref{eq:eom} with matrices $\mass$, $\damp$, $\stiff$.}
+\label{fig:2dof_system}
+\end{figure}
+
+\section{Mass Matrix}
+
+\subsection{Consistent Mass Matrix}
+
+Derived from the same shape functions used for the stiffness matrix. For a bar element:
+\begin{equation}
+    \matr{m}^e = \int_0^L \rho A\, \vect{N}\transpose\vect{N} \dd x
+    = \frac{\rho A L}{6} \begin{bmatrix} 2 & 1 \\ 1 & 2 \end{bmatrix}
+    \label{eq:consistent_mass_bar}
+\end{equation}
+
+For the Euler-Bernoulli beam element with 4 DOFs $[v_1, \theta_1, v_2, \theta_2]$:
+\begin{equation}
+    \matr{m}^e_b = \frac{\rho A L}{420}
+    \begin{bmatrix}
+        156   &  22L   &  54   & -13L  \\
+        22L   &  4L^2  &  13L  & -3L^2 \\
+        54    &  13L   &  156  & -22L  \\
+        -13L  & -3L^2  & -22L  &  4L^2
+    \end{bmatrix}
+    \label{eq:consistent_mass_beam}
+\end{equation}
+
+\subsection{Lumped Mass Matrix}
+
+A diagonal approximation obtained by \emph{row-summing} the consistent mass matrix
+and placing the total on the diagonal:
+\begin{equation}
+    \matr{m}^e_{\text{lump}} = \frac{\rho A L}{2}
+    \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}
+    \label{eq:lumped_mass}
+\end{equation}
+The lumped mass matrix is computationally efficient but less accurate for
+bending-dominated problems.
+
+\begin{remark}
+    Rotational DOF lumped masses are typically set to zero (or a small fraction),
+    which can cause rank-deficiency issues. The consistent mass matrix is generally
+    preferred for structural dynamics.
+\end{remark}
+
+\section{Free Vibration: Eigenvalue Problem}
+
+For free undamped vibration ($\damp = 0$, $\vect{f} = 0$), assuming harmonic
+response $\vect{u}(t) = \vect{\phi}\,e^{i\omega t}$:
+\begin{equation}
+    \stiff\,\vect{\phi} = \omega^2\,\mass\,\vect{\phi}
+    \quad \Longleftrightarrow \quad
+    (\stiff - \omega^2\mass)\,\vect{\phi} = \vect{0}
+    \label{eq:eigenvalue}
+\end{equation}
+
+\begin{importantbox}
+\textbf{Generalized eigenvalue problem:} $\stiff\,\vect{\Phi} = \mass\,\vect{\Phi}\,\boldsymbol{\Omega}^2$
+
+\smallskip
+In MATLAB: \texttt{[Phi, Lambda] = eig(K, M)}
+where \texttt{diag(Lambda)} $= \omega_n^2$.
+\end{importantbox}
+
+The $n$ natural frequencies $\omega_1 \leq \omega_2 \leq \cdots \leq \omega_n$
+and corresponding mode shapes $\vect{\phi}_i$ satisfy:
+\begin{equation}
+    \vect{\Phi}\transpose \mass \vect{\Phi} = \matr{I}, \qquad
+    \vect{\Phi}\transpose \stiff \vect{\Phi} = \text{diag}(\omega_i^2)
+    \label{eq:orthogonality}
+\end{equation}
+(mass-normalized modes).
+
+\section{Modal Analysis}
+
+\subsection{Modal Decomposition}
+
+Expand the response in modal coordinates $\vect{q}(t)$:
+\begin{equation}
+    \vect{u}(t) = \vect{\Phi}\,\vect{q}(t)
+    \label{eq:modal_expansion}
+\end{equation}
+
+Substituting into \cref{eq:eom} and using orthogonality \cref{eq:orthogonality},
+each mode decouples into a SDOF equation:
+\begin{equation}
+    \ddot{q}_i + 2\zeta_i\omega_i\dot{q}_i + \omega_i^2 q_i = f_i^*(t)
+    \label{eq:modal_eom}
+\end{equation}
+where $f_i^*(t) = \vect{\phi}_i\transpose \vect{f}(t)$ is the modal force and
+$\zeta_i$ is the modal damping ratio.
+
+\subsection{Damping: Rayleigh Model}
+
+Proportional (Rayleigh) damping assigns damping as a linear combination of
+mass and stiffness:
+\begin{equation}
+    \damp = \alpha\,\mass + \beta\,\stiff
+    \label{eq:rayleigh}
+\end{equation}
+The coefficients $\alpha$ and $\beta$ are determined from two target damping
+ratios $\zeta_1$, $\zeta_2$ at frequencies $\omega_1$, $\omega_2$:
+\begin{equation}
+    \begin{bmatrix} \zeta_1 \\ \zeta_2 \end{bmatrix} = \frac{1}{2}
+    \begin{bmatrix} 1/\omega_1 & \omega_1 \\ 1/\omega_2 & \omega_2 \end{bmatrix}
+    \begin{bmatrix} \alpha \\ \beta \end{bmatrix}
+    \label{eq:rayleigh_coeff}
+\end{equation}
+
+\section{Time Integration: Newmark-$\beta$ Method}
+
+For direct time integration of \cref{eq:eom}, the Newmark-$\beta$ scheme~\cite{newmark1959method,clough1993dynamics}
+uses:
+\begin{align}
+    \vect{u}_{n+1} &= \vect{u}_n + \Delta t\,\dot{\vect{u}}_n
+                     + \Delta t^2\left[(\tfrac{1}{2}-\beta)\ddot{\vect{u}}_n
+                     + \beta\,\ddot{\vect{u}}_{n+1}\right]
+    \label{eq:newmark_u} \\
+    \dot{\vect{u}}_{n+1} &= \dot{\vect{u}}_n
+                           + \Delta t\left[(1-\gamma)\ddot{\vect{u}}_n
+                           + \gamma\,\ddot{\vect{u}}_{n+1}\right]
+    \label{eq:newmark_v}
+\end{align}
+
+\begin{center}
+\begin{tabular}{@{}llll@{}}
+    \toprule
+    Parameters & Scheme & Stability & Accuracy \\
+    \midrule
+    $\beta=0$, $\gamma=1/2$ & Central difference & Conditional & 2nd order \\
+    $\beta=1/4$, $\gamma=1/2$ & Average acceleration & Unconditional & 2nd order \\
+    $\beta=1/6$, $\gamma=1/2$ & Linear acceleration & Conditional & 2nd order \\
+    \bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Effective Stiffness Matrix}
+
+At each time step solve the effective system:
+\begin{equation}
+    \hat{\stiff}\,\vect{u}_{n+1} = \hat{\vect{f}}_{n+1}
+    \label{eq:newmark_effective}
+\end{equation}
+where:
+\begin{align}
+    \hat{\stiff} &= \stiff + \frac{\gamma}{\beta\Delta t}\damp + \frac{1}{\beta\Delta t^2}\mass
+    \label{eq:eff_K} \\
+    \hat{\vect{f}}_{n+1} &= \vect{f}_{n+1}
+    + \mass\left(\frac{1}{\beta\Delta t^2}\vect{u}_n
+    + \frac{1}{\beta\Delta t}\dot{\vect{u}}_n
+    + \left(\frac{1}{2\beta}-1\right)\ddot{\vect{u}}_n\right) \notag \\
+    &\quad + \damp\left(\frac{\gamma}{\beta\Delta t}\vect{u}_n
+    + \left(\frac{\gamma}{\beta}-1\right)\dot{\vect{u}}_n
+    + \frac{\Delta t}{2}\left(\frac{\gamma}{\beta}-2\right)\ddot{\vect{u}}_n\right)
+    \label{eq:eff_f}
+\end{align}
+
+\section{Connection to 2-DOF System}
+
+The 2-DOF mass-spring-damper system analyzed in the companion MATLAB scripts
+(\texttt{spectrum\_response\_2DOF.m}, \texttt{harmonic\_response\_2DOF.m}) is
+a direct application of \cref{eq:eom} with:
+\begin{equation*}
+    \mass = \begin{bmatrix}m_1&0\\0&m_2\end{bmatrix}, \quad
+    \damp = \begin{bmatrix}c_1{+}c_2&-c_2\\-c_2&c_2\end{bmatrix}, \quad
+    \stiff = \begin{bmatrix}k_1{+}k_2&-k_2\\-k_2&k_2\end{bmatrix}
+\end{equation*}
+The natural frequencies computed by \texttt{eig(K,M)} yield
+$f_{n1} = 2.031$ Hz and $f_{n2} = 4.321$ Hz — exactly the resonance peaks
+observed in the frequency response plots.
+
+\noindent See \Cref{lst:dynamics} in the Appendix for a Newmark-$\beta$
+MATLAB implementation applied to the 2-DOF system.

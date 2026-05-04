@@ -1,0 +1,86 @@
+\documentclass[12pt, a4paper, twoside, openright]{book}
+
+\input{preamble}
+
+%% Book metadata
+\title{%
+    \Huge\bfseries Introduction to the\\[0.5em]
+    Finite Element Method\\[1em]
+    \large Theory, Implementation, and MATLAB Examples
+}
+\author{%
+    \Large Author Name\\[0.5em]
+    \normalsize Department of Mechanical Engineering
+}
+\date{\today}
+
+%% -------------------------------------------------------
+\begin{document}
+
+\frontmatter
+
+%% Title page
+\maketitle
+\thispagestyle{empty}
+\clearpage
+
+%% Dedication
+\vspace*{5cm}
+\begin{center}
+    \itshape
+    Dedicated to all students learning structural mechanics.
+\end{center}
+\clearpage
+
+%% Preface
+\chapter*{Preface}
+\addcontentsline{toc}{chapter}{Preface}
+
+This book provides a concise introduction to the Finite Element Method (FEM) for
+structural and mechanical engineering applications. It is intended for senior
+undergraduate and graduate students who have a background in solid mechanics and
+linear algebra.
+
+Each chapter introduces new element types, derives the governing equations from
+first principles, and concludes with a worked example. MATLAB code listings in
+\Cref{app:matlab} demonstrate practical implementation of the key algorithms.
+
+\bigskip
+\noindent The topics covered are:
+\begin{itemize}
+    \item \textbf{Chapter 2} — Weighted residual methods for an axially loaded bar
+    \item \textbf{Chapter 3} — One-dimensional bar and rod elements
+    \item \textbf{Chapter 4} — Two-dimensional truss and Euler-Bernoulli beam elements
+    \item \textbf{Chapter 5} — Two-dimensional continuum elements (CST and isoparametric quad)
+    \item \textbf{Chapter 6} — Structural dynamics, mass matrices, and time integration
+\end{itemize}
+
+\bigskip
+\noindent\textit{March 2026}
+
+%% Table of contents
+\tableofcontents
+\listoffigures
+\listoftables
+
+%% -------------------------------------------------------
+\mainmatter
+
+\include{chapters/ch01_intro}
+\include{chapters/ch02_weighted_residuals}
+\include{chapters/ch02_1d_elements}
+\include{chapters/ch03_truss_beam}
+\include{chapters/ch04_2d_continuum}
+\include{chapters/ch05_dynamics}
+
+%% -------------------------------------------------------
+\appendix
+\include{appendix/matlab_listings}
+
+%% -------------------------------------------------------
+\backmatter
+
+\bibliographystyle{plain}
+\bibliography{bibliography}
+
+\end{document}

@@ -1,0 +1,435 @@
+\chapter{MATLAB Code Listings}
+\label{app:matlab}
+
+This appendix provides MATLAB implementations for the key algorithms
+presented in each chapter. All scripts are self-contained and use only
+core MATLAB (no additional toolboxes required).
+
+% ---------------------------------------------------------------
+\section{1D Bar Element Assembly and Solution}
+\label{lst:bar1d}
+
+\begin{lstlisting}[caption={Three-element bar under tip load (Chapter~\ref{ch:1d})},
+                   label={code:bar1d}]
+% fem_bar_1d.m -- 3-element 1D bar, tip load
+% Example from Chapter 2
+
+clear; clc;
+
+%% Parameters
+nElem = 3;              % number of elements
+nNode = nElem + 1;      % number of nodes
+L     = 0.9;            % total length [m]
+EA    = 70e6;           % axial stiffness [N]
+F_tip = 10000;          % tip force [N]
+Le    = L / nElem;      % element length [m]
+
+%% Element stiffness matrix
+ke = (EA/Le) * [1 -1; -1 1];
+
+%% Global assembly
+K = zeros(nNode, nNode);
+for e = 1:nElem
+    dofs = [e, e+1];            % global DOFs for element e
+    K(dofs, dofs) = K(dofs, dofs) + ke;
+end
+
+%% Force vector
+f = zeros(nNode, 1);
+f(nNode) = F_tip;               % tip load at last node
+
+%% Apply BC: node 1 fixed (u1 = 0)
+freeDoFs = 2:nNode;
+K_red = K(freeDoFs, freeDoFs);
+f_red = f(freeDoFs);
+
+%% Solve
+u_free = K_red \ f_red;
+u = [0; u_free];                % full displacement vector
+
+%% Post-processing
+fprintf('Nodal displacements [m]:\n');
+for i = 1:nNode
+    fprintf('  u(%d) = %.6e m\n', i, u(i));
+end
+\end{lstlisting}
+
+% ---------------------------------------------------------------
+\section{Stepped Bar with Distributed and Concentrated Loads}
+\label{lst:stepped_bar}
+
+This listing reproduces the worked example of \cref{ex:stepped_bar}: a
+two-element cantilever bar with a step in cross-section, a distributed axial
+load on the first element, and concentrated forces at nodes~2 and~3.
+The script assembles the global stiffness and force vectors element by
+element, applies the fixed boundary condition, solves the reduced system,
+recovers the reaction, and plots the displacement and internal-force fields
+using the enriched trial \cref{eq:bar_disp_enriched}.
+
+\begin{lstlisting}[caption={Stepped bar with distributed and concentrated loads (Chapter~\ref{ch:1d})},
+                   label={code:stepped_bar}]
+% stepped_bar_2elem.m -- two-element stepped bar (Chapter 3)
+% Cantilever bar with two segments:
+%   E1: L1 = 500 mm, area  A,  distributed load p = -4 N/mm
+%   E2: L2 = 400 mm, area 2A, no distributed load
+% Concentrated forces: +6000 N at node 2, -15000 N at node 3.
+
+clear; clc; close all;
+
+%% Material and geometry
+E  = 210000;        % Young's modulus [MPa = N/mm^2]
+A  = 225;           % element-1 cross-section area [mm^2]
+p_e1 = -4;          % distributed load on element 1 [N/mm]
+p_e2 =  0;          % distributed load on element 2 [N/mm]
+
+%% Concentrated forces
+P_node2 =  6000;    % +x at node 2 [N]
+P_node3 = -15000;   % -x at node 3 [N]
+
+%% Discretization
+nodes_x   = [0, 500, 900];      % node coordinates [mm]
+nElem     = 2;
+nNode     = numel(nodes_x);
+nDof      = nNode;              % 1D bar: 1 DOF per node
+elem_conn = [1 2; 2 3];         % element connectivity
+elem_area = [A, 2*A];
+elem_p    = [p_e1, p_e2];
+elem_L    = diff(nodes_x);
+
+%% Initialize globals
+KG    = zeros(nDof, nDof);      % global stiffness
+FG_p  = zeros(nDof, 1);         % distributed-load contribution
+FG_c  = zeros(nDof, 1);         % concentrated forces
+
+%% Element-by-element assembly
+for e = 1:nElem
+    L    = elem_L(e);
+    Ae   = elem_area(e);
+    pe   = elem_p(e);
+    dofs = elem_conn(e,:);
+    ke   = (E*Ae/L) * [1 -1; -1 1];
+    fe_p = (pe*L/2) * [1; 1];
+    KG(dofs, dofs) = KG(dofs, dofs) + ke;
+    FG_p(dofs)     = FG_p(dofs)     + fe_p;
+end
+
+%% Add concentrated forces and form total
+FG_c(2) = P_node2;
+FG_c(3) = P_node3;
+FG = FG_p + FG_c;
+
+%% Boundary conditions: node 1 fixed
+fixed_dofs = 1;
+free_dofs  = setdiff(1:nDof, fixed_dofs);
+
+UG             = zeros(nDof, 1);
+UG(free_dofs)  = KG(free_dofs, free_dofs) \ FG(free_dofs);
+RG             = KG*UG - FG;
+
+fprintf('UG = '); disp(UG');
+fprintf('RG = '); disp(RG');
+
+%% Element-level postprocessing using the enriched trial:
+%   u(x)  = N1*u1 + N2*u2 + p*x*(L-x)/(2EA)
+%   N(x)  = EA*(u2-u1)/L + p*(L-2x)/2
+xg = []; ug = []; Ng = [];
+for e = 1:nElem
+    L    = elem_L(e);
+    Ae   = elem_area(e);
+    pe   = elem_p(e);
+    dofs = elem_conn(e,:);
+    u1   = UG(dofs(1));  u2 = UG(dofs(2));
+    x    = linspace(0, L, 200);
+    xi   = x / L;
+    u_e  = (1-xi)*u1 + xi*u2 + pe*x.*(L - x)/(2*E*Ae);
+    N_e  = E*Ae*(u2-u1)/L + pe*(L - 2*x)/2;
+    xg = [xg, nodes_x(dofs(1)) + x];
+    ug = [ug, u_e];
+    Ng = [Ng, N_e];
+end
+
+%% Plots
+figure('Color','w'); plot(xg, ug, 'LineWidth', 1.5); grid on;
+xlabel('x [mm]'); ylabel('u(x) [mm]');
+title('Displacement along the stepped bar');
+
+figure('Color','w'); plot(xg, Ng, 'LineWidth', 1.5); grid on;
+xlabel('x [mm]'); ylabel('N(x) [N]');
+title('Internal axial force along the stepped bar');
+\end{lstlisting}
+
+% ---------------------------------------------------------------
+\section{Verification of the Principle of Virtual Work}
+\label{lst:pvw_verification}
+
+This listing supports \cref{ex:pvw_verification}: it takes the solved
+stepped bar (the same $u_1, u_2, u_3$) and, for three different
+kinematically admissible virtual displacements, evaluates the internal
+and external virtual work separately. All three cases satisfy
+$\delta W_{\mathrm{int}} = \delta W_{\mathrm{ext}}$ to numerical
+precision, confirming the principle of virtual work.
+
+\begin{lstlisting}[caption={PVW verification for the stepped bar (Chapter~\ref{ch:1d})},
+                   label={code:pvw_verification}]
+% pvw_verification_stepped_bar.m
+% Numerically verify the principle of virtual work for the SOLVED
+% stepped bar (the worked example of Section "Stepped Bar").
+% For three different kinematically admissible virtual displacements,
+% the script computes the internal and external virtual work separately
+% and shows they are equal.
+
+clear; clc;
+
+%% Stepped bar parameters
+E  = 210000;
+A  = 225;
+EA1 = E*A;        % element 1 axial stiffness [N]
+EA2 = E*2*A;      % element 2 axial stiffness [N]
+L1  = 500;        % element 1 length [mm]
+L2  = 400;        % element 2 length [mm]
+p1  = -4;         % element 1 distributed load [N/mm]
+F2  =  6000;      % concentrated force at node 2 [N]
+F3  = -15000;     % concentrated force at node 3 [N]
+
+%% Exact (FEM) nodal displacements from the Stepped Bar example
+u1 = 0;            % fixed
+u2 = -20/189;      % mm   (= -0.10582)
+u3 = -32/189;      % mm   (= -0.16931)
+
+%% Internal axial force in each element using the enriched trial:
+%   N(x) = EA*(u_b - u_a)/L  +  p*(L - 2x_local)/2
+N1 = @(x) EA1*(u2-u1)/L1 + p1*(L1 - 2*x)/2;        % x measured from node 1
+N2 = @(x) EA2*(u3-u2)/L2 + 0*x;                    % x measured from node 2
+
+%% Three admissible virtual displacements (each must satisfy du(x=0)=0)
+%   Each entry stores du(x), du'(x), and the nodal values du(node_k)
+testCases = struct( ...
+  'name',     {}, ...
+  'du',       {}, ...
+  'du_dx',    {}, ...
+  'du_n2',    {}, ...
+  'du_n3',    {});
+
+% Case A -- tent: du_2 = 1, du_3 = 0
+testCases(end+1) = struct( ...
+  'name',  'Case A:  (du_1, du_2, du_3) = (0, 1, 0)', ...
+  'du',    @(x_local, elem) (elem==1).*(x_local/L1) + (elem==2).*(1 - x_local/L2), ...
+  'du_dx', @(x_local, elem) (elem==1)*(1/L1)         + (elem==2)*(-1/L2), ...
+  'du_n2', 1, ...
+  'du_n3', 0);
+
+% Case B -- ramp + plateau: du_2 = 1, du_3 = 1
+testCases(end+1) = struct( ...
+  'name',  'Case B:  (du_1, du_2, du_3) = (0, 1, 1)', ...
+  'du',    @(x_local, elem) (elem==1).*(x_local/L1) + (elem==2).*1, ...
+  'du_dx', @(x_local, elem) (elem==1)*(1/L1)         + (elem==2)*0, ...
+  'du_n2', 1, ...
+  'du_n3', 1);
+
+% Case C -- global quadratic du(x_glob) = (x_glob / Ltot)^2
+Ltot = L1 + L2;
+testCases(end+1) = struct( ...
+  'name',  'Case C:  du(x) = (x / 900)^2  (smooth, non-piecewise-linear)', ...
+  'du',    @(x_local, elem) ((elem==1).*x_local + (elem==2).*(L1 + x_local)).^2 / Ltot^2, ...
+  'du_dx', @(x_local, elem) 2*((elem==1).*x_local + (elem==2).*(L1 + x_local)) / Ltot^2, ...
+  'du_n2', (L1/Ltot)^2, ...
+  'du_n3', 1);
+
+%% Verify PVW for each case
+fprintf('Principle of Virtual Work verification -- stepped bar\n');
+fprintf('Solved nodal displacements:  u1 = 0,  u2 = %.5f,  u3 = %.5f mm\n\n', u2, u3);
+fprintf('%-58s %14s %14s %14s\n', 'Admissible virtual displacement', ...
+        'dW_int [Nmm]', 'dW_ext [Nmm]', '|diff|');
+fprintf('%s\n', repmat('-', 1, 102));
+
+for k = 1:length(testCases)
+    tc = testCases(k);
+
+    % Internal virtual work -- sum element contributions
+    dWint_e1 = integral(@(x) N1(x).*tc.du_dx(x,1), 0, L1);
+    dWint_e2 = integral(@(x) N2(x).*tc.du_dx(x,2), 0, L2);
+    dWint    = dWint_e1 + dWint_e2;
+
+    % External virtual work -- distributed load (element 1 only) and
+    % concentrated forces; reaction at node 1 contributes 0 because du(0)=0.
+    dWext_d  = integral(@(x) p1.*tc.du(x,1), 0, L1);
+    dWext_c  = F2*tc.du_n2 + F3*tc.du_n3;
+    dWext    = dWext_d + dWext_c;
+
+    fprintf('%-58s %14.5f %14.5f %14.2e\n', tc.name, dWint, dWext, abs(dWint-dWext));
+end
+
+fprintf(['\nFor every kinematically admissible virtual displacement,\n', ...
+         'dW_int = dW_ext to numerical precision: PVW holds.\n']);
+
+\end{lstlisting}
+
+% ---------------------------------------------------------------
+\section{2D Beam Element}
+\label{lst:beam2d}
+
+\begin{lstlisting}[caption={Simply supported beam with central load (Chapter~\ref{ch:truss_beam})},
+                   label={code:beam2d}]
+% fem_beam_2d.m -- 2-element Euler-Bernoulli beam
+% Example from Chapter 3
+
+clear; clc;
+
+%% Parameters
+nElem = 2;
+nNode = nElem + 1;
+L_total = 2.0;          % total beam length [m]
+EI      = 1e4;          % bending stiffness [N*m^2]
+P       = 1000;         % central point load [N]
+Le      = L_total / nElem;
+
+%% Beam element stiffness (4 DOF: v1,th1,v2,th2)
+ke = (EI/Le^3) * [12,   6*Le,  -12,   6*Le;
+                   6*Le, 4*Le^2, -6*Le, 2*Le^2;
+                  -12,  -6*Le,   12,  -6*Le;
+                   6*Le, 2*Le^2, -6*Le, 4*Le^2];
+
+%% DOFs: each node has [v, theta]
+nDOF = 2 * nNode;
+K = zeros(nDOF, nDOF);
+
+for e = 1:nElem
+    n1 = e;  n2 = e + 1;
+    dofs = [2*n1-1, 2*n1, 2*n2-1, 2*n2];
+    K(dofs, dofs) = K(dofs, dofs) + ke;
+end
+
+%% Force vector: central load at node 2 (v direction)
+f = zeros(nDOF, 1);
+f(2*(nElem/2+1)-1) = P;
+
+%% BCs: pin at node 1 (v1=0) and node 3 (v3=0)
+fixedDOFs = [1, 2*nNode-1];
+freeDOFs  = setdiff(1:nDOF, fixedDOFs);
+
+K_red = K(freeDOFs, freeDOFs);
+f_red = f(freeDOFs);
+
+u_free = K_red \ f_red;
+u = zeros(nDOF, 1);
+u(freeDOFs) = u_free;
+
+v_mid = u(2*(nElem/2+1)-1);
+v_analytic = P * L_total^3 / (48*EI);
+
+fprintf('FEM mid-span deflection:      %.6e m\n', v_mid);
+fprintf('Analytical (PL^3/48EI):       %.6e m\n', v_analytic);
+fprintf('Error: %.4f%%\n', abs(v_mid - v_analytic)/v_analytic * 100);
+\end{lstlisting}
+
+% ---------------------------------------------------------------
+\section{CST Element for Plane Stress}
+\label{lst:cst2d}
+
+\begin{lstlisting}[caption={Single CST element under plane stress (Chapter~\ref{ch:2d_continuum})},
+                   label={code:cst2d}]
+% fem_cst_2d.m -- Single CST element, plane stress
+% Example from Chapter 4
+
+clear; clc;
+
+E  = 200e9;     % Young's modulus [Pa]
+nu = 0.3;       % Poisson's ratio
+t  = 0.01;      % thickness [m]
+
+D = (E/(1-nu^2)) * [1,  nu, 0;
+                    nu,  1, 0;
+                     0,  0, (1-nu)/2];
+
+x = [0; 1; 0];
+y = [0; 0; 1];
+
+Ae = 0.5 * abs((x(2)-x(1))*(y(3)-y(1)) - (x(3)-x(1))*(y(2)-y(1)));
+fprintf('Element area: %.4f m^2\n', Ae);
+
+b = [y(2)-y(3); y(3)-y(1); y(1)-y(2)];
+c = [x(3)-x(2); x(1)-x(3); x(2)-x(1)];
+
+B = (1/(2*Ae)) * [b(1),   0, b(2),   0, b(3),   0;
+                    0, c(1),   0, c(2),   0, c(3);
+                  c(1), b(1), c(2), b(2), c(3), b(3)];
+
+ke = t * Ae * B' * D * B;
+
+sigma_app = 100e6;
+F_total   = sigma_app * 1 * t;
+f = zeros(6, 1);
+f(3) = F_total / 2;
+f(5) = F_total / 2;
+
+freeDOFs = 3:6;
+u_free = ke(freeDOFs,freeDOFs) \ f(freeDOFs);
+u = zeros(6, 1);
+u(freeDOFs) = u_free;
+
+eps_el = B * u;
+sig_el = D * eps_el;
+fprintf('sigma_x = %.4e\nsigma_y = %.4e\ntau_xy  = %.4e\n', ...
+        sig_el(1), sig_el(2), sig_el(3));
+\end{lstlisting}
+
+% ---------------------------------------------------------------
+\section{Newmark-$\beta$ Time Integration for 2-DOF System}
+\label{lst:dynamics}
+
+\begin{lstlisting}[caption={Newmark-$\beta$ transient response of the 2-DOF system (Chapter~\ref{ch:dynamics})},
+                   label={code:dynamics}]
+% fem_newmark_2dof.m -- Newmark-beta time integration
+% 2-DOF mass-spring-damper system from Chapter 5
+
+clear; clc;
+
+m1 = 1500;   m2 = 1000;
+k1 = 600000; k2 = 300000;
+c1 = 1000;   c2 = 1000;
+
+M = [m1, 0; 0, m2];
+C = [c1+c2, -c2; -c2, c2];
+K = [k1+k2, -k2; -k2, k2];
+
+beta  = 1/4;
+gamma = 1/2;
+
+f_exc  = 2.031;
+omega  = 2*pi*f_exc;
+t_end  = 5;
+dt     = 1e-3;
+t_vec  = 0:dt:t_end;
+nSteps = length(t_vec);
+
+F_amp = [1000; 1200];
+F = @(t) F_amp * sin(omega * t);
+
+u    = zeros(2, 1);
+v    = zeros(2, 1);
+a    = M \ (F(0) - C*v - K*u);
+
+K_eff = K + (gamma/(beta*dt))*C + (1/(beta*dt^2))*M;
+
+U = zeros(2, nSteps);
+U(:,1) = u;
+
+for n = 1:nSteps-1
+    f_eff = F(t_vec(n+1)) ...
+        + M * (1/(beta*dt^2)*u + 1/(beta*dt)*v + (1/(2*beta)-1)*a) ...
+        + C * (gamma/(beta*dt)*u + (gamma/beta-1)*v + dt/2*(gamma/beta-2)*a);
+
+    u_new = K_eff \ f_eff;
+    a_new = 1/(beta*dt^2)*(u_new - u) - 1/(beta*dt)*v - (1/(2*beta)-1)*a;
+    v_new = v + dt*((1-gamma)*a + gamma*a_new);
+
+    U(:, n+1) = u_new;
+    u = u_new;  v = v_new;  a = a_new;
+end
+
+figure('Name','Newmark Transient Response');
+plot(t_vec, U(1,:)*1000, 'b'); hold on;
+plot(t_vec, U(2,:)*1000, 'r');
+xlabel('Time [s]'); ylabel('Displacement [mm]');
+legend('u_1(t)','u_2(t)'); grid on;
+\end{lstlisting}
