@@ -1,4 +1,4 @@
-\chapter{Euler-Bernoulli Beam and Frame Elements}
+\chapter{Euler-Bernoulli Beam Element}
 \label{ch:beam}
 
 \section{Euler-Bernoulli Beam Element}
@@ -61,30 +61,6 @@ bending moment $M = EI\kappa$. The element stiffness is:
     \begin{bmatrix} 6 \\ L \\ 6 \\ -L \end{bmatrix}
     \label{eq:beam_load}
 \end{equation}
-
-\section{Frame Element}
-
-A frame (beam-column) element combines axial bar stiffness and bending beam
-stiffness. In the local frame the DOFs are:
-$\vect{u}^e = [\bar{u}_1,\, \bar{v}_1,\, \bar{\theta}_1,\,
-               \bar{u}_2,\, \bar{v}_2,\, \bar{\theta}_2]\transpose$
-and the local stiffness is the $6\times6$ block-diagonal combination of
-\cref{eq:bar_stiffness,eq:beam_stiffness}.
-
-The $6\times6$ transformation matrix:
-\begin{equation}
-    \matr{T}_6 = \begin{bmatrix} c & s & 0 & 0 & 0 & 0 \\
-                                 -s & c & 0 & 0 & 0 & 0 \\
-                                  0 & 0 & 1 & 0 & 0 & 0 \\
-                                  0 & 0 & 0 & c & s & 0 \\
-                                  0 & 0 & 0 &-s & c & 0 \\
-                                  0 & 0 & 0 & 0 & 0 & 1
-                 \end{bmatrix}
-    \label{eq:frame_T}
-\end{equation}
-
-The global frame element stiffness is $\matr{k}^e = \matr{T}_6\transpose
-\bar{\matr{k}}^e_{\text{frame}} \matr{T}_6$.
 
 \section{Worked Example: Simply Supported Beam}
 

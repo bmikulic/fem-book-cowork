@@ -27,7 +27,8 @@ chapters/
   ch02_weighted_residuals.tex   # Ch.2 Weighted residual methods (collocation, subdomain, Galerkin)
   ch02_1d_elements.tex    # Ch.3 1D bar/rod elements   (filename starts ch02_ — see Quirks)
   ch04_truss.tex          # Ch.4 2D truss element
-  ch05_beam.tex           # Ch.5 Euler-Bernoulli beam and frame elements
+  ch05_beam.tex           # Ch.5 Euler-Bernoulli beam element
+  ch06_frame.tex          # Ch.6 2D frame element
   ch04_2d_continuum.tex   # Ch.5 2D continuum (CST, Q4 isoparametric)
   ch05_dynamics.tex       # Ch.6 Structural dynamics, Newmark-β
 appendix/
@@ -95,7 +96,7 @@ The PVW worked example is a *verification* (compute `δW_int` and `δW_ext` sepa
 
 ## Chapter Numbering Quirk
 
-The filenames `chapters/ch02_*` don't match the *printed* chapter numbers (Ch.3 in the printed book is `ch02_1d_elements.tex`, etc.). This came from an early reordering (Ch.2 weighted residuals was inserted later). Don't rename the files — the cross-references work via `\label` keys (`ch:1d`, `ch:weighted_residuals`, `ch:truss`, `ch:beam`, `ch:2d_continuum`, `ch:dynamics`), and renaming would propagate through the includes for no reader-visible benefit.
+The filenames `chapters/ch02_*` don't match the *printed* chapter numbers (Ch.3 in the printed book is `ch02_1d_elements.tex`, etc.). This came from an early reordering (Ch.2 weighted residuals was inserted later). Don't rename the files — the cross-references work via `\label` keys (`ch:1d`, `ch:weighted_residuals`, `ch:truss`, `ch:beam`, `ch:frame`, `ch:2d_continuum`, `ch:dynamics`), and renaming would propagate through the includes for no reader-visible benefit.
 
 ## Known Editorial TODOs
 
