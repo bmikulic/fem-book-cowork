@@ -265,6 +265,86 @@ fprintf(['\nFor every kinematically admissible virtual displacement,\n', ...
 \end{lstlisting}
 
 % ---------------------------------------------------------------
+\section{2D Truss Analysis}
+\label{lst:truss2d}
+
+\begin{lstlisting}[caption={Three-element planar truss (Chapter~\ref{ch:truss})},
+                   label={code:truss2d}]
+% fem_truss_2d.m -- Chapter 4: Worked Example, 3-element 2D truss
+% Nodes: 1=(0,0), 2=(1000,800), 3=(0,800) [mm]
+% BCs:   node 1 pinned (U1=V1=0), node 3 pinned (U3=V3=0)
+% Load:  Fy = -10000 N (downward) at node 2
+clear; clc; close all;
+
+coords = [   0    0;
+           1000  800;
+              0  800];
+conn = [1 2; 1 3; 3 2];
+E = 210000;  A = 225;
+nEl = 3;  nDOF = 6;
+
+for e = 1:nEl
+    n1 = conn(e,1); n2 = conn(e,2);
+    dx = coords(n2,1) - coords(n1,1);
+    dy = coords(n2,2) - coords(n1,2);
+    Le(e)  = sqrt(dx^2 + dy^2);
+    ce(e)  = dx / Le(e);
+    se(e)  = dy / Le(e);
+    EAL(e) = E * A / Le(e);
+end
+
+K = zeros(nDOF);
+for e = 1:nEl
+    c = ce(e); s = se(e); k = EAL(e);
+    ke = k * [ c^2   c*s  -c^2  -c*s;
+               c*s   s^2  -c*s  -s^2;
+              -c^2  -c*s   c^2   c*s;
+              -c*s  -s^2   c*s   s^2];
+    n1 = conn(e,1); n2 = conn(e,2);
+    dofs = [2*n1-1, 2*n1, 2*n2-1, 2*n2];
+    K(dofs, dofs) = K(dofs, dofs) + ke;
+end
+
+F = zeros(nDOF, 1);
+F(4) = -10000;
+fixedDOFs = [1 2 5 6];
+freeDOFs  = [3 4];
+
+u_free = K(freeDOFs, freeDOFs) \ F(freeDOFs);
+u = zeros(nDOF, 1);
+u(freeDOFs) = u_free;
+
+for e = 1:nEl
+    c = ce(e); s = se(e);
+    n1 = conn(e,1); n2 = conn(e,2);
+    dofs = [2*n1-1, 2*n1, 2*n2-1, 2*n2];
+    N(e) = EAL(e) * ([-c -s c s] * u(dofs));
+end
+
+R = K * u - F;
+
+fprintf('U2 = %.4f mm,  V2 = %.4f mm\n', u(3), u(4));
+fprintf('N1 = %.1f N,  N2 = %.1f N,  N3 = %.1f N\n', N(1), N(2), N(3));
+fprintf('R1x = %.1f N,  R1y = %.1f N\n', R(1), R(2));
+fprintf('R3x = %.1f N,  R3y = %.1f N\n', R(5), R(6));
+
+scale = 500;
+figure; hold on; axis equal;
+for e = 1:nEl
+    n1 = conn(e,1); n2 = conn(e,2);
+    xo = [coords(n1,1) coords(n2,1)];
+    yo = [coords(n1,2) coords(n2,2)];
+    plot(xo, yo, 'k--', 'LineWidth', 1.2);
+    plot(xo + scale*[u(2*n1-1) u(2*n2-1)], ...
+         yo + scale*[u(2*n1)   u(2*n2)  ], 'b-', 'LineWidth', 2.5);
+end
+xlabel('x [mm]'); ylabel('y [mm]');
+title(sprintf('Deformed shape (x%d)', scale));
+exportgraphics(gcf,'../figures/truss2d_deformed.pdf','ContentType','vector');
+exportgraphics(gcf,'../figures/truss2d_deformed.png','Resolution',300);
+\end{lstlisting}
+
+% ---------------------------------------------------------------
 \section{2D Beam Element}
 \label{lst:beam2d}
 
