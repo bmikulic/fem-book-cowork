@@ -820,6 +820,316 @@ true equilibrium within that finite-dimensional space.
 
 \end{example}
 
+% =============================================================================
+\section{Galerkin Finite Element Formulation of the Bar}
+\label{sec:galerkin_fe}
+% =============================================================================
+
+\begin{remark}
+\Cref{ch:weighted_residuals} applied the Galerkin method with a single global
+polynomial -- one free parameter, one weight function -- to the continuous bar.
+The formulation developed here uses the finite element shape functions $N_1$,
+$N_2$ of \cref{eq:bar_shape} as both trial and test functions on each element.
+With piecewise-linear shape functions and one test function per node, this is
+the Galerkin principle applied at the element level: the method through which
+every finite element stiffness integral is derived in practice.
+\end{remark}
+
+\subsection{From Weighted Residuals to Shape Functions}
+\label{sec:galerkin_fe_intro}
+
+Start from the strong form of the loaded bar (\cref{eq:bar_de}):
+\[
+    -EA\,\frac{\dd^2 u}{\dd x^2} = p(x), \qquad 0 < x < L .
+\]
+Substitute the finite element approximation $u^h(x) = \vect{N}(x)\,\vect{u}^e$
+from \cref{eq:bar_disp}. Because $N_1$ and $N_2$ are linear in $x$, their
+second derivative vanishes identically, so the residual is
+\begin{equation}
+    R(x) = -EA\,\frac{\dd^2 u^h}{\dd x^2} - p(x) = -p(x) \neq 0 .
+    \label{eq:galerkin_fe_residual}
+\end{equation}
+The linear approximation cannot satisfy the ODE pointwise when $p(x) \neq 0$;
+it satisfies it instead in an \emph{average} sense. The \textbf{Galerkin
+statement} requires the residual to be orthogonal to each shape function:
+\begin{equation}
+    \int_0^L N_i(x)\,R(x)\,\dd x = 0, \qquad i = 1,\,2 .
+    \label{eq:galerkin_fe_statement}
+\end{equation}
+This choice -- test functions identical to the trial functions -- is called the
+\emph{Bubnov--Galerkin} method and is standard for self-adjoint problems such
+as linear elasticity.
+
+\subsection{Galerkin Weak Form for a Single Element}
+\label{sec:galerkin_fe_weak}
+
+Substituting \cref{eq:galerkin_fe_residual} into \cref{eq:galerkin_fe_statement}
+and expanding:
+\[
+    \int_0^L N_i\!\left(-EA\,\frac{\dd^2 u^h}{\dd x^2} - p\right)\dd x = 0 .
+\]
+Integration by parts on the second-derivative term (the same step as
+\cref{eq:pvw_ibp}) gives
+\begin{equation}
+    \int_0^L EA\,\frac{\dd N_i}{\dd x}\,\frac{\dd u^h}{\dd x}\,\dd x
+    \;-\;
+    \Bigl[N_i\,EA\,\frac{\dd u^h}{\dd x}\Bigr]_0^L
+    \;=\;
+    \int_0^L N_i\,p\,\dd x .
+    \label{eq:galerkin_fe_ibp}
+\end{equation}
+The boundary term vanishes at nodes where the displacement is prescribed
+(kinematic admissibility requires $N_i = 0$ there), and reduces to the applied
+concentrated force $F$ at a free end via the natural boundary condition
+$EA\,\dd u/\dd x = F$. The result is the \textbf{Galerkin weak form}:
+\begin{equation}
+    \int_0^L EA\,\frac{\dd N_i}{\dd x}\,\frac{\dd u^h}{\dd x}\,\dd x
+    \;=\;
+    \int_0^L N_i\,p\,\dd x \;+\; F_i^{\mathrm{natural}} .
+    \label{eq:galerkin_fe_weak_i}
+\end{equation}
+
+\subsection{Element Stiffness Matrix and Load Vector}
+\label{sec:galerkin_fe_matrices}
+
+Writing both rows ($i = 1$ and $i = 2$) simultaneously in matrix form,
+\[
+    \underbrace{
+    \left[\int_0^L EA\,\matr{B}\transpose\matr{B}\,\dd x\right]
+    }_{\matr{k}^e}\!\vect{u}^e
+    \;=\;
+    \underbrace{
+    \int_0^L \vect{N}\transpose p\,\dd x
+    }_{\vect{f}^e} ,
+\]
+where $\matr{B} = \dd\vect{N}/\dd x = \tfrac{1}{L}[\,-1,\;1\,]$ from
+\cref{eq:bar_strain}. Evaluating the integrals:
+\begin{align}
+    \matr{k}^e
+    &= \int_0^L EA\,\matr{B}\transpose\matr{B}\,\dd x
+     = \frac{EA}{L}\begin{bmatrix}1&-1\\-1&1\end{bmatrix} ,
+    \label{eq:galerkin_fe_ke_integral} \\[4pt]
+    \vect{f}^e
+    &= \int_0^L \vect{N}\transpose p_0\,\dd x
+     = p_0\int_0^L\begin{bmatrix}1-x/L\\x/L\end{bmatrix}\dd x
+     = \frac{p_0 L}{2}\begin{bmatrix}1\\1\end{bmatrix} ,
+    \label{eq:galerkin_fe_fe_integral}
+\end{align}
+in exact agreement with \cref{eq:bar_stiffness} and \cref{eq:bar_load}.
+
+\begin{importantbox}
+The Galerkin finite element formulation yields
+\[
+    \matr{k}^e = \int_0^L EA\,\matr{B}\transpose\matr{B}\,\dd x
+              = \frac{EA}{L}\begin{bmatrix}1&-1\\-1&1\end{bmatrix},
+    \qquad
+    \vect{f}^e = \int_0^L \vect{N}\transpose p\,\dd x
+              = \frac{p_0 L}{2}\begin{bmatrix}1\\1\end{bmatrix},
+\]
+identical to \cref{eq:bar_stiffness} and \cref{eq:bar_load}.
+\end{importantbox}
+
+% =============================================================================
+\section{Equivalence of Galerkin and Virtual Work Formulations}
+\label{sec:galerkin_pvw_equivalence}
+% =============================================================================
+
+The Galerkin weak form \cref{eq:galerkin_fe_weak_i} and the PVW equation
+\cref{eq:pvw_final} are the same integral statement. To see this, write them
+side by side:
+\begin{align}
+    \text{PVW:}\quad
+    &\int_0^L EA\,\frac{\dd u}{\dd x}\,\frac{\dd\delta u}{\dd x}\,\dd x
+     = \int_0^L p\,\delta u\,\dd x + \sum_i F_i\,\delta u(x_i) , \notag \\[4pt]
+    \text{Galerkin FE:}\quad
+    &\int_0^L EA\,\frac{\dd u^h}{\dd x}\,\frac{\dd w_i}{\dd x}\,\dd x
+     = \int_0^L p\,w_i\,\dd x + \sum_i F_i\,w_i(x_i) .
+    \label{eq:galerkin_pvw_comparison}
+\end{align}
+Setting $w_i = \delta u$, the two expressions are identical: both require the
+integral to vanish for every kinematically admissible test field, and both
+produce the same discrete system $\matr{k}^e\,\vect{u}^e = \vect{f}^e$.
+
+\begin{remark}
+PVW speaks the language of mechanics: $\delta u$ is an infinitesimal virtual
+displacement, and the equation expresses the balance of virtual internal and
+external work. Galerkin speaks the language of weighted residuals: $w_i = N_i$
+is a test function chosen to make the residual orthogonal to the approximation
+space. They are the same mathematical object. In the finite element context,
+both methods mandate choosing test functions from the same polynomial space as
+the trial -- which is why they produce identical element matrices.
+\end{remark}
+
+% =============================================================================
+\section{Principle of Minimum Potential Energy}
+\label{sec:pmpe}
+% =============================================================================
+
+\subsection{Total Potential Energy of the Axial Bar}
+\label{sec:pmpe_tpe}
+
+\begin{definition}
+The \textbf{strain energy} stored in a linearly elastic axially loaded bar is
+\begin{equation}
+    U = \frac{1}{2}\int_0^L EA\!\left(\frac{\dd u}{\dd x}\right)^{\!2}\dd x .
+    \label{eq:pmpe_strain_energy}
+\end{equation}
+The \textbf{total potential energy} is
+\begin{equation}
+    \Pi[u] = U - W_{\mathrm{ext}},
+    \qquad
+    W_{\mathrm{ext}} = \int_0^L p(x)\,u(x)\,\dd x + \sum_i F_i\,u(x_i) .
+    \label{eq:pmpe_tpe}
+\end{equation}
+\end{definition}
+
+\noindent
+The strain energy $U \geq 0$ is always non-negative. The total potential energy
+$\Pi$ is a functional of the displacement field $u(x)$: each admissible $u$
+gives a scalar value of $\Pi$, and the equilibrium field is singled out by a
+stationarity condition.
+
+\subsection{Stationarity Condition and the Weak Form}
+\label{sec:pmpe_stationarity}
+
+\begin{importantbox}
+\textbf{Principle of Minimum Potential Energy (PMPE):} Of all kinematically
+admissible displacement fields, the one that satisfies equilibrium makes the
+total potential energy stationary:
+\begin{equation}
+    \delta\Pi = 0
+\end{equation}
+for every admissible variation $\delta u$. For a stable elastic equilibrium,
+$\Pi$ is in fact a global minimum.
+\end{importantbox}
+
+Taking the first variation of \cref{eq:pmpe_tpe},
+\begin{equation}
+    \delta\Pi
+    = \int_0^L EA\,\frac{\dd u}{\dd x}\,\frac{\dd\delta u}{\dd x}\,\dd x
+      \;-\;
+      \int_0^L p\,\delta u\,\dd x
+      \;-\;
+      \sum_i F_i\,\delta u(x_i)
+      \;=\; 0 .
+    \label{eq:pmpe_first_variation}
+\end{equation}
+Recognizing the first integral as $\delta W_{\mathrm{int}}$ and the remaining
+terms as $\delta W_{\mathrm{ext}}$, this is precisely the PVW statement
+\cref{eq:pvw_statement}:
+\begin{equation}
+    \delta\Pi = 0
+    \;\Longleftrightarrow\;
+    \delta W_{\mathrm{int}} = \delta W_{\mathrm{ext}} .
+    \label{eq:pmpe_pvw_link}
+\end{equation}
+
+\begin{remark}
+PMPE is a special case of PVW valid for \emph{conservative} systems, where the
+material is linearly elastic and the external loads are independent of the
+deformation. For the axially loaded bar with fixed applied loads, the two
+principles are exactly equivalent. PVW is the more general statement: it
+extends to non-conservative loading (e.g.\ follower loads) for which no
+potential energy exists.
+\end{remark}
+
+\subsection{Element Stiffness Matrix and Load Vector from PMPE}
+\label{sec:pmpe_matrices}
+
+Substitute the finite element trial $u = \vect{N}\,\vect{u}^e$,
+$\dd u/\dd x = \matr{B}\,\vect{u}^e$ into the element contributions to
+\cref{eq:pmpe_tpe}. The strain energy becomes
+\[
+    U^e = \frac{1}{2}\int_0^L EA\,\vect{u}^{e\transpose}\matr{B}\transpose\matr{B}\,\vect{u}^e\,\dd x
+        = \frac{1}{2}\,\vect{u}^{e\transpose}
+          \!\underbrace{\left[\int_0^L EA\,\matr{B}\transpose\matr{B}\,\dd x\right]}_{\matr{k}^e}
+          \!\vect{u}^e
+        = \frac{1}{2}\,\vect{u}^{e\transpose}\matr{k}^e\,\vect{u}^e ,
+\]
+and the work of external loads (uniform $p_0$):
+\[
+    W_{\mathrm{ext}}^e = \int_0^L (\vect{N}\,\vect{u}^e)\,p_0\,\dd x
+        = \vect{u}^{e\transpose}
+          \!\underbrace{\left[\int_0^L \vect{N}\transpose p_0\,\dd x\right]}_{\vect{f}^e}
+        = \vect{u}^{e\transpose}\vect{f}^e .
+\]
+The element potential energy is therefore a quadratic function of the nodal
+displacements:
+\begin{equation}
+    \Pi^e = \frac{1}{2}\,\vect{u}^{e\transpose}\matr{k}^e\,\vect{u}^e
+            - \vect{u}^{e\transpose}\vect{f}^e .
+    \label{eq:pmpe_tpe_element}
+\end{equation}
+Differentiating with respect to $\vect{u}^e$ and setting the result to zero,
+\begin{equation}
+    \frac{\partial\Pi^e}{\partial\vect{u}^e}
+    = \matr{k}^e\,\vect{u}^e - \vect{f}^e = \vect{0}
+    \quad\Longrightarrow\quad
+    \matr{k}^e\,\vect{u}^e = \vect{f}^e .
+    \label{eq:pmpe_stationarity_result}
+\end{equation}
+The integrals evaluate to \cref{eq:galerkin_fe_ke_integral} and
+\cref{eq:galerkin_fe_fe_integral}, so $\matr{k}^e$ and $\vect{f}^e$ are again
+identical to \cref{eq:bar_stiffness} and \cref{eq:bar_load}.
+
+\begin{importantbox}
+Minimizing the element potential energy yields
+\[
+    \matr{k}^e
+    = \int_0^L EA\,\matr{B}\transpose\matr{B}\,\dd x
+    = \frac{EA}{L}\begin{bmatrix}1&-1\\-1&1\end{bmatrix} .
+\]
+The stiffness matrix is the Hessian of the strain energy with respect to the
+nodal displacements.
+\end{importantbox}
+
+\subsection{Summary: Four Equivalent Paths to the Same Element Matrices}
+\label{sec:pmpe_summary}
+
+Four independent derivations all produce the same element stiffness matrix
+$\matr{k}^e$ (\cref{eq:bar_stiffness}) and load vector $\vect{f}^e$
+(\cref{eq:bar_load}).
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Four derivation paths for the bar element matrices.}
+\label{tab:four_methods}
+\begin{tabular}{@{}lp{2.8cm}p{3.8cm}p{3.6cm}@{}}
+\toprule
+\textbf{Method}
+  & \textbf{Starting point}
+  & \textbf{Path to $\matr{k}^e$}
+  & \textbf{Load vector $\vect{f}^e$} \\
+\midrule
+Direct Equilibrium
+  & Hooke's law $+$ nodal force balance
+  & $N = EA\varepsilon$; collect into matrix form
+  & Enriched trial $+$ end reactions (\cref{sec:displacement_field}) \\[6pt]
+PVW
+  & $\delta W_{\mathrm{int}} = \delta W_{\mathrm{ext}}$ (\cref{eq:pvw_statement})
+  & Substitute $u = \vect{N}\vect{u}^e$, $\delta u = \vect{N}\delta\vect{u}^e$
+  & RHS of weak form (\cref{sec:pvw}) \\[6pt]
+Galerkin FE
+  & $\int N_i R\,\dd x = 0$,\newline $w_i = N_i$ (\cref{eq:galerkin_fe_statement})
+  & Integration by parts $+$ $\matr{B}$-matrix (\cref{sec:galerkin_fe})
+  & RHS of weak form (\cref{eq:galerkin_fe_fe_integral}) \\[6pt]
+PMPE
+  & $\delta\Pi = 0$, $\Pi = U - W_{\mathrm{ext}}$ (\cref{eq:pmpe_tpe})
+  & Substitute FE trial into $U^e$; stationarity $\partial\Pi^e/\partial\vect{u}^e = \vect{0}$
+  & $\partial W_{\mathrm{ext}}^e/\partial\vect{u}^e$ (\cref{sec:pmpe_matrices}) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The choice of method is a matter of convenience and generalizability. Direct
+equilibrium is intuitive for one-dimensional elements. PVW and Galerkin FE
+extend unchanged to two- and three-dimensional elements
+(\cref{ch:2d_continuum}); PMPE extends to any conservative system. Numerically,
+all four paths lead to the same linear system $\stiff\,\vect{u} = \vect{f}$,
+as confirmed by the MATLAB scripts \Cref{lst:pvw_verification} and
+\Cref{lst:stepped_bar}.
+
 \section{Natural Coordinates and Isoparametric Mapping}
 
 For generality, it is convenient to define a local (natural) coordinate
