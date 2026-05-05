@@ -308,6 +308,73 @@ and material. The two triangles are geometrically distinct (different orientatio
 the hypotenuse) so their B-matrices differ, leading to different stiffness matrices.
 \end{remark}
 
+\medskip
+\noindent\textbf{Step 4: Global assembly.}
+
+The $8\times8$ global stiffness $\stiff$ is assembled from the two element
+matrices. Element~1 contributes to DOFs $\{1,2,3,4,5,6\}$; element~2 to
+DOFs $\{1,2,5,6,7,8\}$. DOFs $\{1,2,5,6\}$ (nodes~1 and~3) receive
+contributions from both elements:
+
+\begin{equation}
+    \stiff = 10^8 \times
+    \begin{bmatrix*}[r]
+        14.84 &  0     & -10.99 &  3.30  &  0     & -7.14  & -3.85  &  3.85  \\
+         0    & 14.84  &  3.85  & -3.85  & -7.14  &  0     &  3.30  & -10.99 \\
+       -10.99 &  3.85  & 14.84  & -7.14  & -3.85  &  3.30  &  0     &  0     \\
+         3.30 & -3.85  & -7.14  & 14.84  &  3.85  & -10.99 &  0     &  0     \\
+         0    & -7.14  & -3.85  &  3.85  & 14.84  &  0     & -10.99 &  3.30  \\
+        -7.14 &  0     &  3.30  & -10.99 &  0     & 14.84  &  3.85  & -3.85  \\
+        -3.85 &  3.30  &  0     &  0     & -10.99 &  3.85  & 14.84  & -7.14  \\
+         3.85 & -10.99 &  0     &  0     &  3.30  & -3.85  & -7.14  & 14.84
+    \end{bmatrix*}\ \tfrac{\text{N}}{\text{m}}
+    \label{eq:K_cst_global}
+\end{equation}
+
+Note that all diagonal entries equal $14.84 \times 10^8\ \text{N/m}$ --- a
+consequence of the mesh symmetry.
+
+\medskip
+\noindent\textbf{Step 5: Load vector and boundary conditions.}
+
+The global load vector has two non-zero entries:
+$F_3 = F_5 = 500\,000\ \text{N}$ (forces at DOFs~3 and~5, i.e.\ $u_2$ and $u_3$).
+
+Essential BCs: $u_1 = 0$ (DOF~1), $v_1 = 0$ (DOF~2), $u_4 = 0$ (DOF~7).
+The five free DOFs are $\{3,4,5,6,8\}$ ($u_2, v_2, u_3, v_3, v_4$). The
+reduced $5\times5$ system is:
+
+\begin{equation}
+    10^8 \times
+    \begin{bmatrix}
+        14.84 & -7.14  & -3.85  &  3.30  &  0     \\
+        -7.14 & 14.84  &  3.85  & -10.99 &  0     \\
+        -3.85 &  3.85  & 14.84  &  0     &  3.30  \\
+         3.30 & -10.99 &  0     & 14.84  & -3.85  \\
+         0    &  0     &  3.30  & -3.85  & 14.84
+    \end{bmatrix}
+    \begin{bmatrix} u_2 \\ v_2 \\ u_3 \\ v_3 \\ v_4 \end{bmatrix}
+    =
+    \begin{bmatrix} 500\,000 \\ 0 \\ 500\,000 \\ 0 \\ 0 \end{bmatrix}\ \text{N}
+    \label{eq:Kff_cst}
+\end{equation}
+
+\medskip
+\noindent\textbf{Step 6: Solution (MATLAB-verified, \Cref{lst:cst2d}).}
+
+\begin{align*}
+    u_2 &= +5.000\times10^{-4}\ \text{m}, &
+    v_2 &= 0\ \text{m}, \\
+    u_3 &= +5.000\times10^{-4}\ \text{m}, &
+    v_3 &= -1.500\times10^{-4}\ \text{m}, \\
+    u_4 &= 0\ \text{m}, &
+    v_4 &= -1.500\times10^{-4}\ \text{m}.
+\end{align*}
+
+The right edge moves uniformly rightward ($u_2 = u_3 = 0.5\ \text{mm}$) with
+no shear distortion. The top-right and top-left nodes contract vertically by
+$0.15\ \text{mm}$ due to the Poisson effect.
+
 \end{example}
 
 \section{Isoparametric Quadrilateral Element (Q4)}
