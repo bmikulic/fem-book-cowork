@@ -120,6 +120,98 @@ required) because $\matr{B}$ and $\matr{D}$ are both constant over the element:
 \]
 \end{importantbox}
 
+
+% =============================================================================
+\subsection{Worked Example: Two-Element CST Mesh in Uniaxial Tension}
+\label{sec:cst_example}
+% =============================================================================
+
+\begin{example}[Two-element CST plate under uniaxial tension]
+\label{ex:cst_tension}
+
+A $1\ \text{m} \times 1\ \text{m}$ square plate of thickness $t = 0.01\ \text{m}$
+is modelled with two CST elements formed by splitting the square along its diagonal,
+as shown in \cref{fig:cst_example}. Material properties: $E = 200\ \text{GPa}$,
+$\nu = 0.3$, plane stress. A uniform tensile stress $\sigma_x = 100\ \text{MPa}$
+is applied to the right edge, equivalent to a total force
+$F = \sigma_x \cdot t \cdot 1\ \text{m} = 1\ \text{MN}$
+split equally between nodes~2 and~3 as $F/2 = 500\ \text{kN}$ each.
+The left-edge nodes are restrained: pin at node~1 ($u_1 = v_1 = 0$) and
+horizontal roller at node~4 ($u_4 = 0$).
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>=Stealth, x=3.2cm, y=3.2cm,
+    force/.style={->, ultra thick, red!75!black},
+    disp/.style={->, thick, blue!70!black}]
+
+  %% Square outline and diagonal
+  \fill[gray!12] (0,0) -- (1,0) -- (1,1) -- (0,1) -- cycle;
+  \draw[thick] (0,0) -- (1,0) -- (1,1) -- (0,1) -- cycle;
+  \draw[thick] (0,0) -- (1,1);
+
+  %% Element labels
+  \node at (0.62,0.25) {\small\textcircled{\small 1}};
+  \node at (0.25,0.70) {\small\textcircled{\small 2}};
+
+  %% Nodes
+  \filldraw (0,0) circle (2.5pt) node[below left=2pt] {\small\bfseries 1 $(0,0)$};
+  \filldraw (1,0) circle (2.5pt) node[below right=2pt] {\small\bfseries 2 $(1,0)$};
+  \filldraw (1,1) circle (2.5pt) node[above right=2pt] {\small\bfseries 3 $(1,1)$};
+  \filldraw (0,1) circle (2.5pt) node[above left=2pt] {\small\bfseries 4 $(0,1)$};
+
+  %% Pin support at node 1
+  \draw[fill=gray!30,thick] (0,0) -- (-0.12,-0.18) -- (0.12,-0.18) -- cycle;
+  \fill[pattern=north east lines,pattern color=gray!70]
+       (-0.14,-0.18) rectangle (0.14,-0.25);
+  \draw[thick] (-0.14,-0.18) -- (0.14,-0.25);
+
+  %% Roller at node 4 (horizontal roller: free v, fixed u)
+  \draw[fill=gray!30,thick] (0,1) -- (-0.12,0.82) -- (-0.12,1.18) -- cycle;
+  \fill[pattern=north east lines,pattern color=gray!70]
+       (-0.25,0.82) rectangle (-0.18,1.18);
+  \draw[thick] (-0.18,0.82) -- (-0.18,1.18);
+
+  %% Applied forces at nodes 2 and 3
+  \draw[force] (1.0,0) -- (1.45,0)
+       node[right=2pt] {$F/2 = 500\ \text{kN}$};
+  \draw[force] (1.0,1) -- (1.45,1)
+       node[right=2pt] {$F/2 = 500\ \text{kN}$};
+
+  %% Dimensions
+  \draw[<->,thin] (0,-0.35) -- (1,-0.35)
+       node[fill=white,inner sep=1pt,midway] {$1\ \text{m}$};
+  \draw[<->,thin] (-0.35,0) -- (-0.35,1)
+       node[fill=white,inner sep=1pt,midway,rotate=90] {$1\ \text{m}$};
+
+\end{tikzpicture}
+\caption{Two-element CST mesh: 4 nodes, 2 triangular elements formed by the
+diagonal from node~1 to node~3. Pin support at node~1, horizontal roller at
+node~4, and $500\ \text{kN}$ horizontal force at nodes~2 and~3.}
+\label{fig:cst_example}
+\end{figure}
+
+\medskip
+\noindent\textbf{DOF ordering:}
+$[u_1,v_1,u_2,v_2,u_3,v_3,u_4,v_4] = \text{DOFs}\ [1\ldots8]$.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Node coordinates and element connectivity.}
+\label{tab:cst_elements}
+\begin{tabular}{@{}cccccc@{}}
+\toprule
+Elem & Nodes & Node coords (m) & $A_e$ (m$^2$) & Global DOFs \\
+\midrule
+1 & $1\to2\to3$ & $(0,0),(1,0),(1,1)$ & $0.5$ & 1,2,3,4,5,6 \\
+2 & $1\to3\to4$ & $(0,0),(1,1),(0,1)$ & $0.5$ & 1,2,5,6,7,8 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\end{example}
+
 \section{Isoparametric Quadrilateral Element (Q4)}
 
 The 4-node quadrilateral (Q4) uses the same polynomials to interpolate both
@@ -181,20 +273,3 @@ For $2\times2$ Gauss: $n_g=2$, $\xi_i = \pm 1/\sqrt{3}$, $w_i = 1$.
     \bottomrule
 \end{tabular}
 \end{center}
-
-\section{Worked Example: CST Plate in Tension}
-
-\begin{example}[Single CST element under tension]
-\label{ex:cst_tension}
-
-A single CST element: nodes at $(0,0)$, $(1,0)$, $(0,1)$, thickness $t=0.01$ m,
-$E = 200\times10^9$ Pa, $\nu = 0.3$, plane stress. Apply $\sigma_x = 100$ MPa
-(force $F = 0.5$ MN at nodes 2 and 3).
-
-\medskip
-\noindent $A_e = 0.5$ m$^2$,\quad
-$\matr{B}$: constant from \cref{eq:B_cst},\quad
-$\matr{D}$: from \cref{eq:D_planestress}.
-
-\noindent See \Cref{lst:cst2d} in the Appendix for the MATLAB implementation.
-\end{example}
