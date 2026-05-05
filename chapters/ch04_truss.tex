@@ -223,9 +223,93 @@ Assembling the three element matrices into the $6\times6$ global stiffness:
 \end{bmatrix}\ \text{N/mm}
 \end{equation*}
 
-Note how $K_{22} = 14\,398 + 59\,063 = 73\,461$ receives contributions from
-both elements~1 and~2, and $K_{33} = 22\,498 + 47\,250 = 69\,748$ from
-elements~1 and~3.
+\Cref{fig:truss_K_assembly} shows the assembly schematically. Each
+element contributes a $4\times4$ block at its DOFs: element~1 (blue) at
+DOFs 1--4, element~2 (red) at the scattered DOFs 1, 2, 5, 6, and
+element~3 (green) at DOFs 3--6. The three $2\times2$ violet patches in
+the global matrix mark cells where two elements contribute
+simultaneously.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    cell/.style={draw=gray!50, minimum width=4mm, minimum height=4mm,
+                 inner sep=0pt, anchor=center},
+    e1/.style={cell, fill=blue!22},
+    e2/.style={cell, fill=red!22},
+    e3/.style={cell, fill=green!28},
+    emix/.style={cell, fill=violet!35},
+    zc/.style={cell, fill=gray!5},
+    title/.style={font=\bfseries\scriptsize, anchor=south}]
+
+  %% ---- Element 1 contribution (DOFs 1-4) ----
+  \node[title] at (1.0, 1.4) {Element~1};
+  \foreach \r in {1,...,4} \foreach \c in {1,...,4}
+    \node[e1] at ({(\c-1)*0.4}, {1.0-(\r-1)*0.4}) {};
+  \foreach \r in {5,6} \foreach \c in {1,...,6}
+    \node[zc] at ({(\c-1)*0.4}, {1.0-(\r-1)*0.4}) {};
+  \foreach \r in {1,...,4} \foreach \c in {5,6}
+    \node[zc] at ({(\c-1)*0.4}, {1.0-(\r-1)*0.4}) {};
+
+  \node[font=\Large\bfseries] at (2.5, 0) {$+$};
+
+  %% ---- Element 2 contribution (DOFs 1, 2, 5, 6) ----
+  \node[title] at (3.8, 1.4) {Element~2};
+  \foreach \r in {1,2,5,6} \foreach \c in {1,2,5,6}
+    \node[e2] at ({2.8+(\c-1)*0.4}, {1.0-(\r-1)*0.4}) {};
+  \foreach \r in {3,4} \foreach \c in {1,...,6}
+    \node[zc] at ({2.8+(\c-1)*0.4}, {1.0-(\r-1)*0.4}) {};
+  \foreach \r in {1,2,5,6} \foreach \c in {3,4}
+    \node[zc] at ({2.8+(\c-1)*0.4}, {1.0-(\r-1)*0.4}) {};
+
+  \node[font=\Large\bfseries] at (5.3, 0) {$+$};
+
+  %% ---- Element 3 contribution (DOFs 3-6) ----
+  \node[title] at (6.6, 1.4) {Element~3};
+  \foreach \r in {3,...,6} \foreach \c in {3,...,6}
+    \node[e3] at ({5.6+(\c-1)*0.4}, {1.0-(\r-1)*0.4}) {};
+  \foreach \r in {1,2} \foreach \c in {1,...,6}
+    \node[zc] at ({5.6+(\c-1)*0.4}, {1.0-(\r-1)*0.4}) {};
+  \foreach \r in {3,...,6} \foreach \c in {1,2}
+    \node[zc] at ({5.6+(\c-1)*0.4}, {1.0-(\r-1)*0.4}) {};
+
+  \node[font=\Large\bfseries] at (8.1, 0) {$=$};
+
+  %% ---- Global K (combined) ----
+  \node[title] at (9.4, 1.4) {Global $\stiff$};
+  %% e1+e2 overlap (top-left 2x2)
+  \foreach \r in {1,2} \foreach \c in {1,2}
+    \node[emix] at ({8.4+(\c-1)*0.4}, {1.0-(\r-1)*0.4}) {};
+  %% e1+e3 overlap (centre 2x2)
+  \foreach \r in {3,4} \foreach \c in {3,4}
+    \node[emix] at ({8.4+(\c-1)*0.4}, {1.0-(\r-1)*0.4}) {};
+  %% e2+e3 overlap (bottom-right 2x2)
+  \foreach \r in {5,6} \foreach \c in {5,6}
+    \node[emix] at ({8.4+(\c-1)*0.4}, {1.0-(\r-1)*0.4}) {};
+  %% e1 only (cross terms with rows/cols in 1-4 minus the e1+e2 block)
+  \foreach \r/\c in {1/3,1/4,2/3,2/4,3/1,3/2,4/1,4/2}
+    \node[e1] at ({8.4+(\c-1)*0.4}, {1.0-(\r-1)*0.4}) {};
+  %% e2 only (cross terms with DOFs 1,2 to 5,6)
+  \foreach \r/\c in {1/5,1/6,2/5,2/6,5/1,5/2,6/1,6/2}
+    \node[e2] at ({8.4+(\c-1)*0.4}, {1.0-(\r-1)*0.4}) {};
+  %% e3 only (cross terms within 3-6 minus the e1+e3 and e2+e3 blocks)
+  \foreach \r/\c in {3/5,3/6,4/5,4/6,5/3,5/4,6/3,6/4}
+    \node[e3] at ({8.4+(\c-1)*0.4}, {1.0-(\r-1)*0.4}) {};
+\end{tikzpicture}
+\caption{Schematic graphical assembly of the global stiffness matrix.
+Element~1 (blue) fills the $4{\times}4$ block at DOFs~1--4;
+element~2 (red) fills the four corners of a $4{\times}4$ pattern at
+DOFs 1, 2, 5, 6; element~3 (green) fills the $4{\times}4$ block at
+DOFs~3--6. Three $2{\times}2$ violet patches mark the overlaps:
+$e_1\!+\!e_2$ (top-left), $e_1\!+\!e_3$ (centre), and
+$e_2\!+\!e_3$ (bottom-right). Numerical values appear in the matrix
+display above.}
+\label{fig:truss_K_assembly}
+\end{figure}
+
+The three violet overlaps explain the entries that grow on the diagonal:
+$K_{22} = 14\,398 + 59\,063 = 73\,461$ from elements~1 and~2, and
+$K_{33} = 22\,498 + 47\,250 = 69\,748$ from elements~1 and~3.
 
 \medskip
 \noindent\textbf{Step 4: Boundary conditions and reduced system.}

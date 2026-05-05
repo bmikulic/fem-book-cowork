@@ -330,7 +330,8 @@ $K_0 = EI/L_e^3 = 10^4\ \text{N/m}$:
 \noindent\textbf{Step 2: Global assembly.}
 
 Element~1 occupies DOFs $[1,2,3,4]$; element~2 occupies $[3,4,5,6]$.
-The $6\times 6$ global stiffness (divided by $K_0$):
+The graphical assembly is shown in \cref{fig:beam_simple_K_assembly};
+the resulting $6\times 6$ global stiffness, divided by $K_0$, is
 \begin{equation*}
     \frac{\stiff}{K_0} =
     \begin{bmatrix}
@@ -342,8 +343,79 @@ The $6\times 6$ global stiffness (divided by $K_0$):
          0  &  0  &   6 &   2 &  -6 &   4
     \end{bmatrix} .
 \end{equation*}
-Note the overlapping entries at DOFs~3 and~4: $K_{33} = 12+12 = 24K_0$ and
-$K_{34} = -6+6 = 0$.
+The $2\times2$ overlap at DOFs 3--4 receives contributions from both
+elements, giving $K_{33} = 12+12 = 24$, $K_{34} = -6+6 = 0$, and
+$K_{44} = 4+4 = 8$ (in units of $K_0$).
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    cell/.style={draw=gray!60, minimum width=6mm, minimum height=5mm,
+                 inner sep=0pt, anchor=center, font=\scriptsize, align=center},
+    e1/.style={cell, fill=blue!12},
+    e2/.style={cell, fill=red!12},
+    e12/.style={cell, fill=violet!22},
+    zc/.style={cell, fill=gray!7, text=gray!55},
+    title/.style={font=\bfseries\scriptsize, anchor=south}]
+
+  %% Element 1 contribution (DOFs 1-4)
+  \node[title] at (1.5, 1.7) {Element~1};
+  \foreach \c/\v in {0.0/12, 0.6/6, 1.2/{-12}, 1.8/6} \node[e1] at (\c,  1.25) {$\v$};
+  \foreach \c/\v in {0.0/6,  0.6/4, 1.2/{-6},  1.8/2} \node[e1] at (\c,  0.75) {$\v$};
+  \foreach \c/\v in {0.0/{-12},0.6/{-6},1.2/12,1.8/{-6}} \node[e1] at (\c,  0.25) {$\v$};
+  \foreach \c/\v in {0.0/6,  0.6/2, 1.2/{-6},  1.8/4} \node[e1] at (\c, -0.25) {$\v$};
+  \foreach \r in {1.25,0.75,0.25,-0.25} \foreach \c in {2.4,3.0} \node[zc] at (\c,\r) {$0$};
+  \foreach \r in {-0.75,-1.25} \foreach \c in {0.0,0.6,1.2,1.8,2.4,3.0} \node[zc] at (\c,\r) {$0$};
+
+  \node[font=\Large\bfseries] at (3.65, 0) {$+$};
+
+  %% Element 2 contribution (DOFs 3-6)
+  \node[title] at (5.5, 1.7) {Element~2};
+  \foreach \r in {1.25,0.75} \foreach \c in {4.0,4.6,5.2,5.8,6.4,7.0} \node[zc] at (\c,\r) {$0$};
+  \foreach \r in {0.25,-0.25,-0.75,-1.25} \foreach \c in {4.0,4.6} \node[zc] at (\c,\r) {$0$};
+  \foreach \c/\v in {5.2/12, 5.8/6, 6.4/{-12}, 7.0/6} \node[e2] at (\c,  0.25) {$\v$};
+  \foreach \c/\v in {5.2/6,  5.8/4, 6.4/{-6},  7.0/2} \node[e2] at (\c, -0.25) {$\v$};
+  \foreach \c/\v in {5.2/{-12},5.8/{-6},6.4/12,7.0/{-6}} \node[e2] at (\c, -0.75) {$\v$};
+  \foreach \c/\v in {5.2/6,  5.8/2, 6.4/{-6},  7.0/4} \node[e2] at (\c, -1.25) {$\v$};
+
+  \node[font=\Large\bfseries] at (7.65, 0) {$=$};
+
+  %% Global K / K_0
+  \node[title] at (9.5, 1.7) {Global $\stiff/K_0$};
+  % Row 1 (DOF 1)
+  \foreach \c/\v in {8.0/12, 8.6/6, 9.2/{-12}, 9.8/6} \node[e1] at (\c, 1.25) {$\v$};
+  \foreach \c in {10.4,11.0} \node[zc] at (\c, 1.25) {$0$};
+  % Row 2 (DOF 2)
+  \foreach \c/\v in {8.0/6, 8.6/4, 9.2/{-6}, 9.8/2} \node[e1] at (\c, 0.75) {$\v$};
+  \foreach \c in {10.4,11.0} \node[zc] at (\c, 0.75) {$0$};
+  % Row 3 (DOF 3) -- overlap at cols 3,4
+  \node[e1]  at (8.0, 0.25) {$-12$};
+  \node[e1]  at (8.6, 0.25) {$-6$};
+  \node[e12] at (9.2, 0.25) {$24$};
+  \node[e12] at (9.8, 0.25) {$0$};
+  \node[e2]  at (10.4,0.25) {$-12$};
+  \node[e2]  at (11.0,0.25) {$6$};
+  % Row 4 (DOF 4) -- overlap at cols 3,4
+  \node[e1]  at (8.0, -0.25) {$6$};
+  \node[e1]  at (8.6, -0.25) {$2$};
+  \node[e12] at (9.2, -0.25) {$0$};
+  \node[e12] at (9.8, -0.25) {$8$};
+  \node[e2]  at (10.4,-0.25) {$-6$};
+  \node[e2]  at (11.0,-0.25) {$2$};
+  % Row 5 (DOF 5)
+  \foreach \c in {8.0,8.6} \node[zc] at (\c, -0.75) {$0$};
+  \foreach \c/\v in {9.2/{-12},9.8/{-6},10.4/12,11.0/{-6}} \node[e2] at (\c, -0.75) {$\v$};
+  % Row 6 (DOF 6)
+  \foreach \c in {8.0,8.6} \node[zc] at (\c, -1.25) {$0$};
+  \foreach \c/\v in {9.2/6,9.8/2,10.4/{-6},11.0/4} \node[e2] at (\c, -1.25) {$\v$};
+\end{tikzpicture}
+\caption{Graphical assembly of the global stiffness matrix
+(in units of $K_0 = EI/L_e^3$). Element~1 (blue) fills DOFs~1--4,
+element~2 (red) fills DOFs~3--6. The $2{\times}2$ violet block at
+DOFs~3--4 receives contributions from both elements; its entries
+$24, 0, 0, 8$ are the sums of the two overlapping $4\times 4$ blocks.}
+\label{fig:beam_simple_K_assembly}
+\end{figure}
 
 \medskip
 \noindent\textbf{Step 3: Load vector and boundary conditions.}

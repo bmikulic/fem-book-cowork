@@ -302,7 +302,106 @@ $EA = 70 \times 10^6$ N.
     \begin{bmatrix}1&-1\\-1&1\end{bmatrix}
 \]
 
-\noindent\textbf{Global system} (4 DOFs, node 1 fixed):
+\medskip
+\noindent\textbf{Graphical assembly of the global stiffness matrix.}
+The three identical $2{\times}2$ element matrices are added into the
+$4{\times}4$ global matrix at the rows and columns of their nodes
+(\cref{fig:3bar_K_assembly}): element~1 occupies DOFs~1--2, element~2
+DOFs~2--3, element~3 DOFs~3--4. The two interior diagonals (DOFs 2 and 3)
+each receive contributions from two elements, so their global values
+equal $1+1 = 2$.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    cell/.style={draw=gray!60, minimum width=6mm, minimum height=5mm,
+                 inner sep=0pt, anchor=center, font=\scriptsize, align=center},
+    e1/.style={cell, fill=blue!12},
+    e2/.style={cell, fill=red!12},
+    e3/.style={cell, fill=green!18},
+    emix/.style={cell, fill=violet!22},
+    zc/.style={cell, fill=gray!7, text=gray!55},
+    title/.style={font=\bfseries\scriptsize, anchor=south}]
+
+  %% Matrix 1: element 1 contribution (DOFs 1, 2)
+  \node[title] at (0.9, 1.20) {Element~1};
+  \node[e1] at (0.0, 0.75) {$+1$};
+  \node[e1] at (0.6, 0.75) {$-1$};
+  \node[zc] at (1.2, 0.75) {$0$};
+  \node[zc] at (1.8, 0.75) {$0$};
+  \node[e1] at (0.0, 0.25) {$-1$};
+  \node[e1] at (0.6, 0.25) {$+1$};
+  \node[zc] at (1.2, 0.25) {$0$};
+  \node[zc] at (1.8, 0.25) {$0$};
+  \foreach \r in {-0.25,-0.75} \foreach \c in {0.0,0.6,1.2,1.8} {
+    \node[zc] at (\c, \r) {$0$};
+  }
+
+  \node[font=\Large\bfseries] at (2.4, 0.25) {$+$};
+
+  %% Matrix 2: element 2 contribution (DOFs 2, 3)
+  \node[title] at (3.9, 1.20) {Element~2};
+  \foreach \c in {3.0,3.6,4.2,4.8} {
+    \node[zc] at (\c,  0.75) {$0$};
+    \node[zc] at (\c, -0.75) {$0$};
+  }
+  \node[zc] at (3.0,  0.25) {$0$};
+  \node[e2] at (3.6,  0.25) {$+1$};
+  \node[e2] at (4.2,  0.25) {$-1$};
+  \node[zc] at (4.8,  0.25) {$0$};
+  \node[zc] at (3.0, -0.25) {$0$};
+  \node[e2] at (3.6, -0.25) {$-1$};
+  \node[e2] at (4.2, -0.25) {$+1$};
+  \node[zc] at (4.8, -0.25) {$0$};
+
+  \node[font=\Large\bfseries] at (5.4, 0.25) {$+$};
+
+  %% Matrix 3: element 3 contribution (DOFs 3, 4)
+  \node[title] at (6.9, 1.20) {Element~3};
+  \foreach \r in {0.75,0.25} \foreach \c in {6.0,6.6,7.2,7.8} {
+    \node[zc] at (\c, \r) {$0$};
+  }
+  \node[zc] at (6.0, -0.25) {$0$};
+  \node[zc] at (6.6, -0.25) {$0$};
+  \node[e3] at (7.2, -0.25) {$+1$};
+  \node[e3] at (7.8, -0.25) {$-1$};
+  \node[zc] at (6.0, -0.75) {$0$};
+  \node[zc] at (6.6, -0.75) {$0$};
+  \node[e3] at (7.2, -0.75) {$-1$};
+  \node[e3] at (7.8, -0.75) {$+1$};
+
+  \node[font=\Large\bfseries] at (8.4, 0.25) {$=$};
+
+  %% Matrix 4: global K
+  \node[title] at (9.9, 1.20) {Global $\stiff$};
+  \node[e1]   at (9.0,  0.75) {$+1$};
+  \node[e1]   at (9.6,  0.75) {$-1$};
+  \node[zc]   at (10.2, 0.75) {$0$};
+  \node[zc]   at (10.8, 0.75) {$0$};
+  \node[e1]   at (9.0,  0.25) {$-1$};
+  \node[emix] at (9.6,  0.25) {$+2$};
+  \node[e2]   at (10.2, 0.25) {$-1$};
+  \node[zc]   at (10.8, 0.25) {$0$};
+  \node[zc]   at (9.0, -0.25) {$0$};
+  \node[e2]   at (9.6, -0.25) {$-1$};
+  \node[emix] at (10.2,-0.25) {$+2$};
+  \node[e3]   at (10.8,-0.25) {$-1$};
+  \node[zc]   at (9.0, -0.75) {$0$};
+  \node[zc]   at (9.6, -0.75) {$0$};
+  \node[e3]   at (10.2,-0.75) {$-1$};
+  \node[e3]   at (10.8,-0.75) {$+1$};
+\end{tikzpicture}
+\caption{Graphical assembly of the global stiffness matrix
+(in units of $EA/L_e = 2.\overline{3}\times10^8$~N/m).
+Element~1 (blue) at DOFs~1--2, element~2 (red) at DOFs~2--3, element~3
+(green) at DOFs~3--4. The violet diagonals at DOFs 2 and 3 receive
+contributions from two elements each.}
+\label{fig:3bar_K_assembly}
+\end{figure}
+
+\noindent The resulting global system (4 DOFs, node 1 fixed; no
+distributed loads, so $\vect{f}$ contains only the concentrated tip
+force) is
 \[
     \stiff = 2.\overline{3}\times10^8
     \begin{bmatrix}
@@ -311,7 +410,7 @@ $EA = 70 \times 10^6$ N.
          0 & -1 &  2 & -1 \\
          0 &  0 & -1 &  1
     \end{bmatrix},
-    \qquad \vect{f} = \begin{bmatrix}0\\0\\0\\10000\end{bmatrix}
+    \qquad \vect{f} = \begin{bmatrix}0\\0\\0\\10000\end{bmatrix}.
 \]
 
 \noindent\textbf{Applying BC} $u_1 = 0$ (strike row/column 1):
