@@ -508,71 +508,68 @@ is discretized with three elements, as shown in \cref{fig:beam_continuous}.
 
 \begin{figure}[htbp]
 \centering
-% Coordinates use 1 unit = 0.5 m of beam (so 6 m beam spans 12 cm horizontally).
+% Coordinates: 1 unit = 0.5 m of beam (so 6 m beam spans 12 cm horizontally).
 % Node 1: x=0; node 2: x=6; node 3: x=10; node 4: x=12.
-\begin{tikzpicture}[x=1cm, y=1cm, >=Stealth]
+\begin{tikzpicture}[>=Stealth, x=1cm, y=1cm,
+    distload/.style={->,thick,blue!75!black},
+    concforce/.style={->,ultra thick,red!75!black},
+    dim/.style={<->,thin}]
 
-  %% --- Beam (gray bar) ---
-  \fill[gray!55]            (0, -0.10) rectangle (12, 0.10);
-  \draw[gray!75!black]      (0, -0.10) rectangle (12, 0.10);
+  %% --- Beam ---
+  \fill[gray!22] (0, -0.18) rectangle (12, 0.18);
+  \draw[thick]   (0, -0.18) rectangle (12, 0.18);
 
-  %% --- Distributed load q = 10 kN/m on element 1 (x=0..6) ---
-  \foreach \x in {0.20,0.45,...,5.95}
-      \draw[->, blue!50!cyan, thick] (\x, 0.95) -- (\x, 0.18);
-  \node[blue!55!cyan, font=\sffamily\bfseries] at (3, 1.32) {10 kN/m};
+  %% --- Distributed load q = 10 N/mm on element 1 (x = 0..6) ---
+  \foreach \x in {0.30,0.55,...,5.80}
+      \draw[distload] (\x, 1.00) -- (\x, 0.22);
+  \node[blue!75!black, above] at (3, 1.00) {$q = 10\ \text{N/mm}$};
 
-  %% --- Concentrated load P = 30 kN at node 3 (x=10) ---
-  \draw[->, line width=1.1pt] (10, 1.50) -- (10, 0.18);
-  \node[font=\sffamily\bfseries] at (9.50, 1.55) {30 kN};
+  %% --- Concentrated load P = 30 kN at node 3 (x = 10) ---
+  \draw[concforce] (10, 1.40) -- (10, 0.22);
+  \node[red!75!black, above] at (10, 1.42) {$P = 30\ \text{kN}$};
 
   %% --- Supports ---
-  % Node 1: pin
-  \draw[fill=gray!55, thick]
-       (0, -0.18) -- (-0.32, -0.55) -- (0.32, -0.55) -- cycle;
+  % Pin at node 1
+  \draw[fill=gray!25, thick]
+       (0, -0.18) -- (-0.30, -0.55) -- (0.30, -0.55) -- cycle;
   \fill[pattern=north east lines, pattern color=gray!70]
-       (-0.50, -0.55) rectangle (0.50, -0.75);
-  \draw[thick] (-0.50, -0.55) -- (0.50, -0.55);
-  % Node 2: roller (triangle + two circles + hatched ground)
-  \draw[fill=gray!55, thick]
+       (-0.45, -0.55) rectangle (0.45, -0.75);
+  \draw[thick] (-0.45, -0.55) -- (0.45, -0.55);
+  % Roller at node 2
+  \draw[fill=gray!25, thick]
        (6, -0.18) -- (5.70, -0.50) -- (6.30, -0.50) -- cycle;
-  \fill[gray!55] (5.85, -0.55) circle (0.045);
-  \fill[gray!55] (6.15, -0.55) circle (0.045);
+  \fill[gray!25] (5.85, -0.55) circle (0.045);
+  \fill[gray!25] (6.15, -0.55) circle (0.045);
   \fill[pattern=north east lines, pattern color=gray!70]
-       (5.50, -0.60) rectangle (6.50, -0.80);
-  \draw[thick] (5.50, -0.60) -- (6.50, -0.60);
-  % Node 4: roller
-  \draw[fill=gray!55, thick]
+       (5.55, -0.60) rectangle (6.45, -0.80);
+  \draw[thick] (5.55, -0.60) -- (6.45, -0.60);
+  % Roller at node 4
+  \draw[fill=gray!25, thick]
        (12, -0.18) -- (11.70, -0.50) -- (12.30, -0.50) -- cycle;
-  \fill[gray!55] (11.85, -0.55) circle (0.045);
-  \fill[gray!55] (12.15, -0.55) circle (0.045);
+  \fill[gray!25] (11.85, -0.55) circle (0.045);
+  \fill[gray!25] (12.15, -0.55) circle (0.045);
   \fill[pattern=north east lines, pattern color=gray!70]
-       (11.50, -0.60) rectangle (12.50, -0.80);
-  \draw[thick] (11.50, -0.60) -- (12.50, -0.60);
+       (11.55, -0.60) rectangle (12.45, -0.80);
+  \draw[thick] (11.55, -0.60) -- (12.45, -0.60);
 
-  %% --- Node disks (drawn after supports so the triangle apex tucks behind) ---
-  \foreach \x/\n in {0/1, 6/2, 10/3, 12/4} {
-    \filldraw[fill=orange!85!red, draw=orange!55!black, line width=0.7pt]
-       (\x, 0) circle (0.18);
-    \node[white, font=\sffamily\bfseries\small] at (\x, 0) {\n};
-  }
+  %% --- Node dots and node numbers (above-right of each node) ---
+  \filldraw (0, 0)  circle (3pt) node[above right=1pt] {\small\bfseries 1};
+  \filldraw (6, 0)  circle (3pt) node[above right=1pt] {\small\bfseries 2};
+  \filldraw (10, 0) circle (3pt) node[above right=1pt] {\small\bfseries 3};
+  \filldraw (12, 0) circle (3pt) node[above right=1pt] {\small\bfseries 4};
 
-  %% --- Element-number boxes (blue) below the beam ---
-  \foreach \x/\e in {3/1, 8/2, 11/3} {
-    \node[fill=blue!75!cyan, text=white, font=\sffamily\bfseries\footnotesize,
-          minimum width=4.2mm, minimum height=4.2mm, inner sep=0pt]
-         at (\x, -0.45) {\e};
-  }
+  %% --- Element numbers (\textcircled, between supports) ---
+  \node at (3,  -1.05) {\bfseries\textcircled{\small 1}};
+  \node at (8,  -1.05) {\bfseries\textcircled{\small 2}};
+  \node at (11, -1.05) {\bfseries\textcircled{\small 3}};
 
-  %% --- Dimension lines ---
-  \draw[|<->|, thick] (0, -1.05) -- (6, -1.05)
-        node[fill=white, inner sep=1pt, midway,
-             font=\sffamily\bfseries\small] {3000mm};
-  \draw[|<->|, thick] (6, -1.05) -- (10, -1.05)
-        node[fill=white, inner sep=1pt, midway,
-             font=\sffamily\bfseries\small] {2000mm};
-  \draw[|<->|, thick] (10, -1.05) -- (12, -1.05)
-        node[fill=white, inner sep=1pt, midway,
-             font=\sffamily\bfseries\small] {1000mm};
+  %% --- Dimensions ---
+  \draw[dim] (0, -1.55) -- (6, -1.55)
+        node[fill=white, inner sep=1pt, midway] {\small $3000$~mm};
+  \draw[dim] (6, -1.55) -- (10, -1.55)
+        node[fill=white, inner sep=1pt, midway] {\small $2000$~mm};
+  \draw[dim] (10, -1.55) -- (12, -1.55)
+        node[fill=white, inner sep=1pt, midway] {\small $1000$~mm};
 
 \end{tikzpicture}
 \caption{Three-element continuous beam. Distributed load
