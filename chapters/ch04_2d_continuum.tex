@@ -210,6 +210,104 @@ Elem & Nodes & Node coords (m) & $A_e$ (m$^2$) & Global DOFs \\
 \end{tabular}
 \end{table}
 
+
+\medskip
+\noindent\textbf{Step 1: Element geometry and B-matrices.}
+
+For a CST with nodes at $(x_1,y_1)$, $(x_2,y_2)$, $(x_3,y_3)$, the
+coefficients are $b_i = y_j - y_k$ and $c_i = x_k - x_j$
+(cyclic, \cref{eq:cst_shape}), and $\matr{B}$ is constant (\cref{eq:B_cst}).
+
+\smallskip
+\noindent\textit{Element~1} (nodes $1\to2\to3$, coordinates $(0,0),(1,0),(1,1)$):
+\[
+    b_1 = -1,\quad b_2 = 1,\quad b_3 = 0,\qquad
+    c_1 = 0,\quad c_2 = -1,\quad c_3 = 1,\qquad 2A_e = 1\ \text{m}^2
+\]
+\begin{equation}
+    \matr{B}^{(1)} =
+    \begin{bmatrix}
+        -1 &  0 &  1 &  0 &  0 &  0 \\
+         0 &  0 &  0 & -1 &  0 &  1 \\
+         0 & -1 & -1 &  1 &  1 &  0
+    \end{bmatrix}\ \text{m}^{-1}
+    \label{eq:B1_cst_ex}
+\end{equation}
+
+\noindent\textit{Element~2} (nodes $1\to3\to4$, coordinates $(0,0),(1,1),(0,1)$):
+\[
+    b_1 = 0,\quad b_2 = 1,\quad b_3 = -1,\qquad
+    c_1 = -1,\quad c_2 = 0,\quad c_3 = 1,\qquad 2A_e = 1\ \text{m}^2
+\]
+\begin{equation}
+    \matr{B}^{(2)} =
+    \begin{bmatrix}
+         0 &  0 &  1 &  0 & -1 &  0 \\
+         0 & -1 &  0 &  0 &  0 &  1 \\
+        -1 &  0 &  0 &  1 &  1 & -1
+    \end{bmatrix}\ \text{m}^{-1}
+    \label{eq:B2_cst_ex}
+\end{equation}
+
+The two B-matrices differ because the diagonal splits the square asymmetrically:
+element~1 has its right-angle corner at node~2, element~2 at node~4.
+
+\medskip
+\noindent\textbf{Step 2: Constitutive matrix.}
+
+Plane stress with $E = 200\ \text{GPa}$, $\nu = 0.3$:
+\begin{equation}
+    \matr{D} = \frac{200\times10^9}{1-0.09}
+    \begin{bmatrix}1 & 0.3 & 0 \\ 0.3 & 1 & 0 \\ 0 & 0 & 0.35\end{bmatrix}
+    =
+    \begin{bmatrix}
+        2.198\times10^{11} & 6.593\times10^{10} & 0 \\
+        6.593\times10^{10} & 2.198\times10^{11} & 0 \\
+        0 & 0 & 7.692\times10^{10}
+    \end{bmatrix}\ \text{Pa}
+    \label{eq:D_cst_ex}
+\end{equation}
+
+\medskip
+\noindent\textbf{Step 3: Element stiffness matrices.}
+
+Using $\matr{k}^e = t\,A_e\,\matr{B}\transpose\matr{D}\matr{B}$ (\cref{eq:cst_stiffness})
+with $t\,A_e = 0.01 \times 0.5 = 0.005\ \text{m}^3$:
+
+\begin{equation}
+    \matr{k}^{(1)} = 10^8 \times
+    \begin{bmatrix}
+        10.99 &  0     & -10.99 &  3.30  &  0     & -3.30  \\
+         0    &  3.85  &   3.85 & -3.85  & -3.85  &  0     \\
+       -10.99 &  3.85  &  14.84 & -7.14  & -3.85  &  3.30  \\
+         3.30 & -3.85  &  -7.14 & 14.84  &  3.85  & -10.99 \\
+         0    & -3.85  &  -3.85 &  3.85  &  3.85  &  0     \\
+        -3.30 &  0     &   3.30 & -10.99 &  0     & 10.99
+    \end{bmatrix}\ \tfrac{\text{N}}{\text{m}}
+    \quad \text{(DOFs }u_1,v_1,u_2,v_2,u_3,v_3\text{)}
+    \label{eq:ke1_cst}
+\end{equation}
+
+\begin{equation}
+    \matr{k}^{(2)} = 10^8 \times
+    \begin{bmatrix}
+         3.85 &  0     &  0     & -3.85  & -3.85  &  3.85  \\
+         0    & 10.99  & -3.30  &  0     &  3.30  & -10.99 \\
+         0    & -3.30  & 10.99  &  0     & -10.99 &  3.30  \\
+        -3.85 &  0     &  0     &  3.85  &  3.85  & -3.85  \\
+        -3.85 &  3.30  & -10.99 &  3.85  & 14.84  & -7.14  \\
+         3.85 & -10.99 &  3.30  & -3.85  & -7.14  & 14.84
+    \end{bmatrix}\ \tfrac{\text{N}}{\text{m}}
+    \quad \text{(DOFs }u_1,v_1,u_3,v_3,u_4,v_4\text{)}
+    \label{eq:ke2_cst}
+\end{equation}
+
+\begin{remark}
+$\matr{k}^{(1)} \neq \matr{k}^{(2)}$ even though both elements have the same area
+and material. The two triangles are geometrically distinct (different orientations of
+the hypotenuse) so their B-matrices differ, leading to different stiffness matrices.
+\end{remark}
+
 \end{example}
 
 \section{Isoparametric Quadrilateral Element (Q4)}
