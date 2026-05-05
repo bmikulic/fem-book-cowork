@@ -263,3 +263,157 @@ extensions of \cref{sec:beam_pvw,sec:beam_pmpe}: replace the $4\times4$
 beam integrals with the $6\times6$ frame counterparts after applying
 $\matr{T}_6$.
 \end{remark}
+
+% =============================================================================
+\section{Worked Example: Portal Frame under Combined Loading}
+\label{sec:frame_example}
+% =============================================================================
+
+\begin{example}[Portal frame --- lateral force and distributed beam load]
+\label{ex:frame_portal}
+
+A symmetric portal frame has column height $H = 3000\ \text{mm}$ and beam
+span $B = 4000\ \text{mm}$. All members share the same cross-section:
+$E = 210{,}000\ \text{N/mm}^2$, $A = 6{,}000\ \text{mm}^2$,
+$I = 10{,}000{,}000\ \text{mm}^4$. Both column bases are clamped (fixed).
+The frame carries:
+\begin{itemize}
+    \item a rightward horizontal force $F = 10\ \text{kN}$ at the top of
+          the left column (node~2), and
+    \item a uniform downward load $q = 5\ \text{N/mm}$ on the beam
+          (element~2).
+\end{itemize}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>=Stealth, x=1.1cm, y=1.0cm,
+    force/.style={->,ultra thick,red!75!black},
+    disp/.style={->,thick,blue!70!black}]
+
+  %% Frame members (columns: 0--3 in y; beam: 0--4 in x at y=3)
+  \draw[line width=2pt,gray!60] (0,0) -- (0,3);   % left column
+  \draw[line width=2pt,gray!60] (0,3) -- (4,3);   % beam
+  \draw[line width=2pt,gray!60] (4,3) -- (4,0);   % right column
+
+  %% Fixed supports (hatched rectangles + horizontal line)
+  \fill[pattern=north east lines,pattern color=gray!70]
+        (-0.45,-0.30) rectangle (0.45,0);
+  \draw[thick] (-0.45,0) -- (0.45,0);
+  \fill[pattern=north east lines,pattern color=gray!70]
+        (3.55,-0.30) rectangle (4.45,0);
+  \draw[thick] (3.55,0) -- (4.45,0);
+
+  %% Distributed downward load on beam
+  \foreach \xp in {0.2,0.5,...,3.8}{
+      \draw[disp,->,thin] (\xp,3.65) -- (\xp,3.12);
+  }
+  \draw[disp,thick] (0,3.65) -- (4,3.65);
+  \node[above=2pt,blue!70!black] at (2,3.68) {$q = 5\ \text{N/mm}$};
+
+  %% Lateral force at node 2
+  \draw[force] (-1.6,3) -- (-0.08,3)
+       node[above=3pt,midway] {$F = 10\ \text{kN}$};
+
+  %% Nodes
+  \filldraw (0,0) circle (3pt) node[below left=3pt] {\small\bfseries 1};
+  \filldraw (0,3) circle (3pt) node[above left=3pt] {\small\bfseries 2};
+  \filldraw (4,3) circle (3pt) node[above right=3pt] {\small\bfseries 3};
+  \filldraw (4,0) circle (3pt) node[below right=3pt] {\small\bfseries 4};
+
+  %% Element numbers
+  \node[left=10pt]  at (0,1.5) {\small\textcircled{\small 1}};
+  \node[above=6pt]  at (2,3)   {\small\textcircled{\small 2}};
+  \node[right=10pt] at (4,1.5) {\small\textcircled{\small 3}};
+
+  %% Dimension lines
+  \draw[<->,thin] (-0.9,0) -- (-0.9,3)
+       node[fill=white,inner sep=1pt,midway,rotate=90]
+       {$H = 3000\ \text{mm}$};
+  \draw[<->,thin] (0,-0.7) -- (4,-0.7)
+       node[fill=white,inner sep=1pt,midway] {$B = 4000\ \text{mm}$};
+
+\end{tikzpicture}
+\caption{Portal frame: four nodes, three elements, clamped bases at
+nodes~1 and~4. Combined loading: horizontal force $F$ at node~2 and
+uniform vertical load $q$ on the beam.}
+\label{fig:frame_portal}
+\end{figure}
+
+\medskip
+\noindent\textbf{DOF ordering:}
+$[u_1,v_1,\theta_1,\,u_2,v_2,\theta_2,\,u_3,v_3,\theta_3,\,u_4,v_4,\theta_4]
+= \text{DOFs}\ [1\ldots12]$.\\
+Clamped DOFs: $\{1,2,3,10,11,12\}=\mathbf{0}$.
+Free DOFs: $\{4,5,6,7,8,9\}$.
+
+\medskip
+\noindent\textbf{Step 1: Element data.}
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Element data for the portal frame example.}
+\label{tab:frame_elements}
+\begin{tabular}{@{}ccccccc@{}}
+\toprule
+Elem & Nodes & $L$ (mm) & $\alpha$ ($^\circ$) & $c$ & $s$ & Global DOFs \\
+\midrule
+1 & $1\to2$ & 3000 &  90 & $0$ & $+1$ & 1,2,3,4,5,6 \\
+2 & $2\to3$ & 4000 &   0 & $1$ & $0$  & 4,5,6,7,8,9 \\
+3 & $3\to4$ & 3000 & $-90$ & $0$ & $-1$ & 7,8,9,10,11,12 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\medskip
+\noindent\textbf{Step 2: Local stiffness constants.}
+
+Let $a=EA/L$, $b=12EI/L^3$, $d=6EI/L^2$, $e_4=4EI/L$, $e_2=2EI/L$.
+
+\smallskip
+For the columns (elements 1 and 3, $L_c = 3000\ \text{mm}$):
+\begin{align*}
+  a_c &= \frac{210{,}000 \times 6{,}000}{3{,}000} = 420{,}000\ \tfrac{\text{N}}{\text{mm}},
+  &b_c &= \frac{12 \times 210{,}000 \times 10^7}{3{,}000^3} = 933.3\ \tfrac{\text{N}}{\text{mm}},\\
+  d_c &= \frac{6 \times 210{,}000 \times 10^7}{3{,}000^2} = 1{,}400{,}000\ \text{N},
+  &e_{4c} &= \frac{4 \times 210{,}000 \times 10^7}{3{,}000} = 2.800\times10^9\ \text{N\,mm},\\
+  &&e_{2c} &= \tfrac{1}{2}\,e_{4c} = 1.400\times10^9\ \text{N\,mm}.
+\end{align*}
+
+For the beam (element 2, $L_b = 4000\ \text{mm}$):
+\begin{align*}
+  a_b &= \frac{210{,}000 \times 6{,}000}{4{,}000} = 315{,}000\ \tfrac{\text{N}}{\text{mm}},
+  &b_b &= \frac{12 \times 210{,}000 \times 10^7}{4{,}000^3} = 393.75\ \tfrac{\text{N}}{\text{mm}},\\
+  d_b &= \frac{6 \times 210{,}000 \times 10^7}{4{,}000^2} = 787{,}500\ \text{N},
+  &e_{4b} &= \frac{4 \times 210{,}000 \times 10^7}{4{,}000} = 2.100\times10^9\ \text{N\,mm},\\
+  &&e_{2b} &= 1.050\times10^9\ \text{N\,mm}.
+\end{align*}
+
+\medskip
+\noindent\textbf{Step 3: Transformation matrices.}
+
+For elements~1 and~3, the column geometry gives $c=0$, $|s|=1$:
+\[
+    \matr{T}_6^{(1)} =
+    \begin{bmatrix}
+         0 &  1 & 0 & 0 &  0 & 0 \\
+        -1 &  0 & 0 & 0 &  0 & 0 \\
+         0 &  0 & 1 & 0 &  0 & 0 \\
+         0 &  0 & 0 & 0 &  1 & 0 \\
+         0 &  0 & 0 &-1 &  0 & 0 \\
+         0 &  0 & 0 & 0 &  0 & 1
+    \end{bmatrix}\!,\quad
+    \matr{T}_6^{(3)} =
+    \begin{bmatrix}
+         0 & -1 & 0 &  0 &  0 & 0 \\
+         1 &  0 & 0 &  0 &  0 & 0 \\
+         0 &  0 & 1 &  0 &  0 & 0 \\
+         0 &  0 & 0 &  0 & -1 & 0 \\
+         0 &  0 & 0 &  1 &  0 & 0 \\
+         0 &  0 & 0 &  0 &  0 & 1
+    \end{bmatrix}\!.
+\]
+For the beam ($\alpha=0^\circ$): $\matr{T}_6^{(2)} = \matr{I}_6$, so the beam's
+local and global stiffness matrices are identical.
+
+\end{example}
