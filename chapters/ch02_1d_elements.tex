@@ -515,9 +515,56 @@ elements.
 \label{fig:stepped_bar_K_assembly}
 \end{figure}
 
-\paragraph{Force vector assembly.}
-The distributed-load contribution from element~1 lands at DOFs 1 and 2; the
-concentrated forces are placed directly at their respective nodes:
+\paragraph{Graphical assembly of the load vector.}
+The same row-mapping rule applies to the load vector: each element's
+distributed-load contribution $\vect{f}_p^{(e)}$ is placed into the global
+vector at the rows corresponding to its nodes
+(\cref{fig:stepped_bar_F_assembly}). Element~1 contributes to DOFs 1 and 2;
+element~2 to DOFs 2 and 3; DOF~2 receives both, identically to the matrix
+case.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    cell/.style={draw=gray!60, minimum width=18mm, minimum height=8mm,
+                 inner sep=0pt, anchor=center, font=\footnotesize, align=center},
+    e1/.style={cell, fill=blue!12},
+    e2/.style={cell, fill=red!12},
+    e12/.style={cell, fill=violet!22},
+    zc/.style={cell, fill=gray!7, text=gray!55},
+    title/.style={font=\bfseries\footnotesize, anchor=south}]
+  %% Vector 1: element 1 distributed contribution
+  \node[title] at (0.0,1.7) {Element~1 contribution};
+  \node[e1]  at (0.0,0.85) {$-1000$};
+  \node[e1]  at (0.0,0.00) {$-1000$};
+  \node[zc]  at (0.0,-0.85) {$0$};
+  %% Plus
+  \node[font=\Large\bfseries] at (1.6,0) {$+$};
+  %% Vector 2: element 2 distributed contribution
+  \node[title] at (3.2,1.7) {Element~2 contribution};
+  \node[zc]  at (3.2,0.85) {$0$};
+  \node[e2]  at (3.2,0.00) {$0$};
+  \node[e2]  at (3.2,-0.85) {$0$};
+  %% Equals
+  \node[font=\Large\bfseries] at (4.8,0) {$=$};
+  %% Vector 3: distributed-load global
+  \node[title] at (6.4,1.7) {Distributed $\vect{f}_p$};
+  \node[e1]   at (6.4,0.85) {$-1000$};
+  \node[e12]  at (6.4,0.00) {$-1000$};
+  \node[e2]   at (6.4,-0.85) {$0$};
+\end{tikzpicture}
+\caption{Graphical assembly of the distributed-load vector. Element~1's
+$2{\times}1$ contribution lands at DOFs 1 and 2 (blue); element~2's at
+DOFs 2 and 3 (red, all zero here because $p_2 = 0$); the violet entry
+at DOF~2 receives contributions from both elements
+($-1000 + 0 = -1000$). The colour scheme is identical to
+\cref{fig:stepped_bar_K_assembly}.}
+\label{fig:stepped_bar_F_assembly}
+\end{figure}
+
+The concentrated forces $\vect{f}_c$, applied directly at their respective
+nodes, are then added on top of $\vect{f}_p$ to give the total load
+vector:
 \[
    \vect{f}_p = \begin{bmatrix} -1000 \\ -1000 \\ 0 \end{bmatrix},\quad
    \vect{f}_c = \begin{bmatrix} 0 \\ 6000 \\ -15000 \end{bmatrix},\quad
