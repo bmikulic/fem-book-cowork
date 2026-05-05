@@ -118,11 +118,10 @@ for e = 1:nEl
     H2  = xi.*(1 - xi/L).^2;
     H3  = 3*(xi/L).^2 - 2*(xi/L).^3;
     H4  = xi.*((xi/L).^2 - xi/L);
-    H1p = (-6*xi/L^2 + 6*xi.^2/L^3);
-    H2p = (1 - xi/L).^2 + xi.*2.*(1-xi/L).*(-1/L);
-    H3p = (6*xi/L^2 - 6*xi.^2/L^3);
-    H4p = (xi/L).^2 + xi.*2.*(xi/L).*(1/L) - xi./L.^2.*L;  % simplified below
-    % Cleaner:
+    H1p = -6*xi/L^2 + 6*xi.^2/L^3;
+    H2p = 1 - 4*xi/L + 3*xi.^2/L^2;
+    H3p =  6*xi/L^2 - 6*xi.^2/L^3;
+    H4p = -2*xi/L   + 3*xi.^2/L^2;
     H1pp = 12*xi/L^3 - 6/L^2;
     H2pp = 6*xi/L^2 - 4/L;
     H3pp = -12*xi/L^3 + 6/L^2;
