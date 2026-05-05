@@ -1131,17 +1131,171 @@ as confirmed by the MATLAB scripts \Cref{lst:pvw_verification} and
 \Cref{lst:stepped_bar}.
 
 \section{Natural Coordinates and Isoparametric Mapping}
+\label{sec:isoparametric_1d}
 
-For generality, it is convenient to define a local (natural) coordinate
-$\xi \in [-1, 1]$ related to $x$ by:
+The element formulations developed so far were written directly in the
+physical coordinate $x \in [0, L]$. For higher-order elements, distorted
+geometries, and two- or three-dimensional continua, it is far more
+convenient to work in a fixed \emph{natural} (or \emph{parametric})
+coordinate $\xi \in [-1, 1]$, the same for every element regardless of its
+size or position. The mapping between $\xi$ and $x$ is built from the same
+shape functions used to interpolate the displacement --- the defining
+property of the \emph{isoparametric} concept. We now re-derive the bar
+element matrices in this framework and recover the familiar results
+\cref{eq:bar_stiffness} and \cref{eq:bar_load}.
+
+\subsection{The Isoparametric Mapping}
+
+Define the linear coordinate transformation
 \begin{equation}
-    x = \frac{1-\xi}{2}\, x_1 + \frac{1+\xi}{2}\, x_2, \qquad
-    \dd x = \frac{L}{2}\dd\xi
+    x(\xi) = N_1(\xi)\, x_1 + N_2(\xi)\, x_2
+    = \frac{1-\xi}{2}\, x_1 + \frac{1+\xi}{2}\, x_2,
+    \qquad \xi \in [-1,1],
     \label{eq:isomap_1d}
 \end{equation}
-The shape functions in natural coordinates become:
+which sends $\xi = -1 \mapsto x = x_1$ and $\xi = +1 \mapsto x = x_2$. The
+shape functions in natural coordinates are
 \begin{equation}
-    N_1(\xi) = \frac{1-\xi}{2}, \qquad N_2(\xi) = \frac{1+\xi}{2}
+    N_1(\xi) = \frac{1-\xi}{2}, \qquad N_2(\xi) = \frac{1+\xi}{2},
+    \label{eq:bar_shape_xi}
 \end{equation}
-This mapping is the foundation of the isoparametric concept used in
-\Cref{ch:2d_continuum}.
+and they satisfy $N_i(\xi_j) = \delta_{ij}$ at the parent nodes
+$\xi_1 = -1$, $\xi_2 = +1$, together with the partition of unity
+$N_1(\xi) + N_2(\xi) = 1$.
+
+The displacement is interpolated with the \emph{same} two functions,
+\begin{equation}
+    u(\xi) = N_1(\xi)\, u_1 + N_2(\xi)\, u_2
+    = \vect{N}(\xi)\,\vect{u}^e,
+    \label{eq:bar_disp_xi}
+\end{equation}
+which is what makes the formulation isoparametric: a single set of
+$\{N_i(\xi)\}$ describes both the geometry and the field.
+
+\subsection{Jacobian of the Mapping}
+
+The Jacobian of \cref{eq:isomap_1d} measures how a unit length in the
+parent domain stretches into the physical domain:
+\begin{equation}
+    J(\xi) = \frac{\dd x}{\dd\xi}
+    = \sum_{i=1}^{2} \frac{\dd N_i}{\dd\xi}\, x_i
+    = -\tfrac{1}{2}\, x_1 + \tfrac{1}{2}\, x_2
+    = \frac{x_2 - x_1}{2} = \frac{L}{2}.
+    \label{eq:jacobian_1d}
+\end{equation}
+For the two-node linear bar the Jacobian is \emph{constant} and equal to
+half the element length. The differential transforms as
+$\dd x = J\,\dd\xi = (L/2)\,\dd\xi$, and the inverse Jacobian needed for
+the chain rule is $J^{-1} = 2/L$.
+
+\begin{remark}
+$J(\xi)$ being constant is a special feature of the linear 1D element on
+a uniform mesh. For curved sides (Q4 in \cref{ch:2d_continuum}) or
+higher-order shape functions, $J$ varies over the element and the
+integrals below can no longer be evaluated by inspection.
+\end{remark}
+
+\subsection{Strain-Displacement Matrix in Natural Coordinates}
+
+The strain $\varepsilon = \dd u/\dd x$ requires a derivative with respect
+to $x$, while $u$ is now a function of $\xi$. The chain rule supplies the
+missing factor:
+\begin{equation}
+    \varepsilon
+    = \frac{\dd u}{\dd x}
+    = \frac{\dd u}{\dd\xi}\frac{\dd\xi}{\dd x}
+    = J^{-1}\,\frac{\dd u}{\dd\xi}
+    = \frac{2}{L}\,\frac{\dd u}{\dd\xi}.
+\end{equation}
+Substituting \cref{eq:bar_disp_xi}, $\dd u/\dd\xi
+= -\tfrac{1}{2}\,u_1 + \tfrac{1}{2}\,u_2$, gives
+\begin{equation}
+    \varepsilon(\xi) = \matr{B}(\xi)\,\vect{u}^e,
+    \qquad
+    \matr{B}(\xi) = J^{-1}\frac{\dd \vect{N}}{\dd\xi}
+    = \frac{2}{L}\,\tfrac{1}{2}\begin{bmatrix} -1 & 1 \end{bmatrix}
+    = \frac{1}{L}\begin{bmatrix} -1 & 1 \end{bmatrix} ,
+    \label{eq:bar_B_xi}
+\end{equation}
+which is identical to \cref{eq:bar_strain}. Note that $\matr{B}$ is again
+constant in $\xi$: a linear displacement field produces a constant strain,
+exactly as in the physical-coordinate derivation.
+
+\subsection{Element Stiffness Matrix via Natural Coordinates}
+
+The element stiffness derived from PVW or Galerkin (\cref{sec:pvw,sec:galerkin_fe}) is
+\begin{equation}
+    \matr{k}^e = \int_0^{L} \matr{B}\transpose\, EA\, \matr{B} \,\dd x.
+\end{equation}
+Changing variables to $\xi$ via \cref{eq:isomap_1d}, the limits become
+$\pm 1$ and $\dd x = J\,\dd\xi$:
+\begin{equation}
+    \matr{k}^e = \int_{-1}^{+1} \matr{B}(\xi)\transpose\,EA\,\matr{B}(\xi)
+    \, J(\xi)\,\dd\xi .
+    \label{eq:ke_natural_1d}
+\end{equation}
+With $\matr{B}\transpose\matr{B} = (1/L)^2\,[-1\;\;1]\transpose[-1\;\;1]
+= (1/L^2)\,\begin{smallmatrix}\phantom{-}1\;\;-1\\-1\;\;\phantom{-}1\end{smallmatrix}$
+and $J = L/2$, the integrand is constant:
+\begin{equation}
+    \matr{B}\transpose EA\,\matr{B}\,J
+    = \frac{EA}{L^2}\begin{bmatrix} 1 & -1 \\ -1 & 1 \end{bmatrix}\frac{L}{2}
+    = \frac{EA}{2L}\begin{bmatrix} 1 & -1 \\ -1 & 1 \end{bmatrix} .
+\end{equation}
+Carrying out the trivial integration $\int_{-1}^{+1}\dd\xi = 2$,
+\begin{equation}
+    \matr{k}^e = \frac{EA}{2L}\begin{bmatrix} 1 & -1 \\ -1 & 1 \end{bmatrix}
+                \cdot 2
+    = \frac{EA}{L}\begin{bmatrix} 1 & -1 \\ -1 & 1 \end{bmatrix} ,
+\end{equation}
+recovering \cref{eq:bar_stiffness} exactly.
+
+\subsection{Consistent Load Vector via Natural Coordinates}
+
+For a uniform distributed axial load $p(x) = p_0$, the variational load
+vector is $\vect{f}^e = \int_0^L \vect{N}\transpose p \,\dd x$. The same
+change of variables produces
+\begin{equation}
+    \vect{f}^e
+    = \int_{-1}^{+1} \vect{N}(\xi)\transpose\, p_0\, J\,\dd\xi
+    = p_0\,\frac{L}{2}\!
+      \int_{-1}^{+1}\!\!
+      \begin{bmatrix} (1-\xi)/2 \\ (1+\xi)/2 \end{bmatrix}\dd\xi .
+\end{equation}
+Each scalar integral equals one,
+\[
+    \int_{-1}^{+1}\frac{1-\xi}{2}\,\dd\xi = 1,
+    \qquad
+    \int_{-1}^{+1}\frac{1+\xi}{2}\,\dd\xi = 1,
+\]
+so
+\begin{equation}
+    \vect{f}^e = \frac{p_0 L}{2}\begin{bmatrix} 1 \\ 1 \end{bmatrix} ,
+\end{equation}
+in agreement with \cref{eq:bar_load}: half of the total distributed load
+is lumped at each node, regardless of which coordinate system is used to
+evaluate the integral.
+
+\subsection{Numerical Integration: A Preview of Gauss Quadrature}
+\label{sec:gauss_preview_1d}
+
+For the bar both integrands above are simple enough to evaluate by hand,
+but for higher-order or curved elements they generally cannot be. The
+standard remedy is \emph{Gauss--Legendre quadrature}, which approximates
+\begin{equation}
+    \int_{-1}^{+1} g(\xi)\,\dd\xi \approx \sum_{p=1}^{n_g} w_p\,g(\xi_p),
+\end{equation}
+with the points $\xi_p$ and weights $w_p$ chosen so that polynomials up
+to degree $2n_g - 1$ are integrated \emph{exactly}. For the linear bar:
+the integrand of $\matr{k}^e$ is degree~$0$ in $\xi$, and the integrand of
+$\vect{f}^e$ is degree~$1$, so a single Gauss point ($n_g = 1$) at
+$\xi_1 = 0$ with weight $w_1 = 2$ is already exact.
+
+For the bilinear quadrilateral introduced in \cref{ch:2d_continuum} the
+Jacobian is no longer constant, $\matr{B}$ depends on $(\xi,\eta)$, and a
+$2\times2$ Gauss rule is required. The structure of the calculation is
+nevertheless identical to \cref{eq:ke_natural_1d}: shape functions and
+their natural derivatives, a Jacobian, an inverse Jacobian for the
+chain rule, and a sum (or integral) over the parent domain. The 1D
+derivation in this section is a complete dress rehearsal for that more
+general case.
