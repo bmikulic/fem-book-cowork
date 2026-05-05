@@ -1,26 +1,91 @@
 \chapter{2D Frame Element}
 \label{ch:frame}
 
+% =============================================================================
 \section{Frame Element}
+\label{sec:frame_element}
+% =============================================================================
 
-A frame (beam-column) element combines axial bar stiffness and bending beam
-stiffness. In the local frame the DOFs are:
-$\vect{u}^e = [\bar{u}_1,\, \bar{v}_1,\, \bar{\theta}_1,\,
-               \bar{u}_2,\, \bar{v}_2,\, \bar{\theta}_2]\transpose$
-and the local stiffness is the $6\times6$ block-diagonal combination of
-\cref{eq:bar_stiffness,eq:beam_stiffness}.
+A \emph{frame element} (beam-column) combines the axial stiffness of a bar
+element with the bending stiffness of an Euler-Bernoulli beam element into a
+single structural member. Unlike truss elements, which transmit axial force
+only through pinned joints, frame elements transmit \emph{axial force, shear
+force, and bending moment} at rigid joints. Frames are the appropriate model
+whenever joint rigidity induces bending in the members: portal frames,
+multi-storey building frames, and any structure in which loads are not applied
+along member axes.
 
-The $6\times6$ transformation matrix:
+In the \emph{local coordinate system} $(\bar{x},\bar{y})$ aligned with the
+element axis, each node carries three DOFs --- axial displacement $\bar{u}$,
+transverse displacement $\bar{v}$, and rotation $\theta$ (positive
+counter-clockwise). The six-component local DOF vector and its conjugate
+nodal force vector are:
 \begin{equation}
-    \matr{T}_6 = \begin{bmatrix} c & s & 0 & 0 & 0 & 0 \\
-                                 -s & c & 0 & 0 & 0 & 0 \\
-                                  0 & 0 & 1 & 0 & 0 & 0 \\
-                                  0 & 0 & 0 & c & s & 0 \\
-                                  0 & 0 & 0 &-s & c & 0 \\
-                                  0 & 0 & 0 & 0 & 0 & 1
-                 \end{bmatrix}
-    \label{eq:frame_T}
+    \bar{\vect{u}}^e =
+    [\bar{u}_1,\,\bar{v}_1,\,\theta_1,\,
+     \bar{u}_2,\,\bar{v}_2,\,\theta_2]\transpose, \qquad
+    \bar{\vect{f}}^e =
+    [\bar{N}_1,\,\bar{V}_1,\,\bar{M}_1,\,
+     \bar{N}_2,\,\bar{V}_2,\,\bar{M}_2]\transpose,
+    \label{eq:frame_dof}
 \end{equation}
+where $\bar{N}_i$ is the axial force, $\bar{V}_i$ the shear force, and
+$\bar{M}_i$ the bending moment at node~$i$ (see \cref{fig:frame_element}).
 
-The global frame element stiffness is $\matr{k}^e = \matr{T}_6\transpose
-\bar{\matr{k}}^e_{\text{frame}} \matr{T}_6$.
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>=Stealth, x=1cm, y=1cm,
+    disp/.style={->, very thick, blue!70!black},
+    force/.style={->, ultra thick, red!75!black}]
+
+  %% Element body
+  \fill[gray!22] (0,-0.22) rectangle (7,0.22);
+  \draw[thick]   (0,-0.22) rectangle (7,0.22);
+  \node[above=4pt] at (3.5,0.22) {$E,\;A,\;I$};
+
+  %% Nodes
+  \filldraw (0,0) circle (3.5pt);
+  \filldraw (7,0) circle (3.5pt);
+  \node[below left=2pt]  at (0,0) {\small\bfseries 1};
+  \node[below right=2pt] at (7,0) {\small\bfseries 2};
+
+  %% Local axis label
+  \draw[->,thin] (-0.3,-0.7) -- ++(1.8,0) node[right] {$\bar{x}$};
+  \draw[->,thin] (-0.3,-0.7) -- ++(0,1.2) node[above] {$\bar{y}$};
+
+  %% Displacements at node 1 (blue, above)
+  \draw[disp] (-0.8,0.5) -- ++(0.8,0) node[above,midway] {$\bar{u}_1$};
+  \draw[disp] (0,0.65)   -- ++(0,0.9) node[right=2pt,midway] {$\bar{v}_1$};
+  \draw[disp,->] (0.05,1.72) arc[start angle=200,end angle=70,radius=0.55]
+        node[above left=-2pt] {$\theta_1$};
+
+  %% Displacements at node 2 (blue, above)
+  \draw[disp] (7.0,0.5) -- ++(0.8,0) node[above,midway] {$\bar{u}_2$};
+  \draw[disp] (7.0,0.65) -- ++(0,0.9) node[right=2pt,midway] {$\bar{v}_2$};
+  \draw[disp,->] (7.05,1.72) arc[start angle=200,end angle=70,radius=0.55]
+        node[above left=-2pt] {$\theta_2$};
+
+  %% Forces at node 1 (red, below)
+  \draw[force] (-0.9,-0.55) -- ++(0.9,0) node[below,midway] {$\bar{N}_1$};
+  \draw[force] (0,-0.65)    -- ++(0,-0.9) node[right=2pt,midway] {$\bar{V}_1$};
+  \draw[force,->] (0.05,-1.57) arc[start angle=160,end angle=290,radius=0.55]
+        node[below left=-2pt] {$\bar{M}_1$};
+
+  %% Forces at node 2 (red, below)
+  \draw[force] (7.9,-0.55) -- ++(-0.9,0) node[below,midway] {$\bar{N}_2$};
+  \draw[force] (7,-0.65)   -- ++(0,-0.9) node[right=2pt,midway] {$\bar{V}_2$};
+  \draw[force,->] (7.05,-1.57) arc[start angle=160,end angle=290,radius=0.55]
+        node[below left=-2pt] {$\bar{M}_2$};
+
+  %% Length dimension
+  \draw[<->,thin] (0,-2.40) -- (7,-2.40)
+        node[fill=white,inner sep=1pt,midway] {$L$};
+
+\end{tikzpicture}
+\caption{Two-node frame element in the local frame $(\bar{x},\bar{y})$.
+Displacements $\bar{u}_i, \bar{v}_i$ (blue) and rotations $\theta_i$
+(blue, CCW positive) are the kinematic DOFs. Conjugate nodal forces
+$\bar{N}_i$ (axial), $\bar{V}_i$ (shear), and moments $\bar{M}_i$ (red)
+are the static conjugates.}
+\label{fig:frame_element}
+\end{figure}
