@@ -161,3 +161,105 @@ DOFs~1 and~4 ($\bar{u}$ displacements); the transverse terms go to DOFs~2,
 In the worked example of \cref{sec:frame_example}, the beam (element~2)
 carries a downward transverse load, so $q_0 = -q < 0$ and $p_0 = 0$;
 the two columns carry no distributed load.
+
+% =============================================================================
+\section{Coordinate Transformation}
+\label{sec:frame_transform}
+% =============================================================================
+
+Frame members are generally inclined in the global $(x,y)$ plane. The
+$6\times6$ transformation matrix $\matr{T}_6$ maps from the global frame to
+the local frame. With $c = \cos\alpha$ and $s = \sin\alpha$, where $\alpha$
+is the element inclination angle:
+
+\begin{equation}
+    \matr{T}_6 =
+    \begin{bmatrix}
+         c &  s & 0 & 0 & 0 & 0 \\
+        -s &  c & 0 & 0 & 0 & 0 \\
+         0 &  0 & 1 & 0 & 0 & 0 \\
+         0 &  0 & 0 & c & s & 0 \\
+         0 &  0 & 0 &-s & c & 0 \\
+         0 &  0 & 0 & 0 & 0 & 1
+    \end{bmatrix}
+    \label{eq:frame_T6}
+\end{equation}
+
+$\matr{T}_6$ consists of two identical $3\times3$ rotation blocks (one per
+node), each rotating the displacement pair $(u_i,v_i)$ from global to local
+while leaving the rotation $\theta_i$ unchanged.  The structure mirrors the
+truss transformation (\cref{eq:truss_T}), extended by the scalar rotation DOF.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>=Stealth, x=1.1cm, y=1.0cm,
+    disp/.style={->,thick,blue!70!black}]
+
+  \def\alph{35}
+
+  %% Element
+  \draw[line width=2.5pt,gray!55]
+        (0,0) -- ({4.5*cos(\alph)},{4.5*sin(\alph)});
+  \filldraw (0,0)                        circle (3.5pt)
+        node[below left=1pt] {\small\bfseries 1};
+  \filldraw ({4.5*cos(\alph)},{4.5*sin(\alph)}) circle (3.5pt)
+        node[above right=1pt] {\small\bfseries 2};
+
+  %% Global axes
+  \draw[->,thick] (0,0) -- ++(2.6,0) node[right] {$x$};
+  \draw[->,thick] (0,0) -- ++(0,2.6) node[above] {$y$};
+
+  %% Local axes
+  \draw[->,thick,blue!75!black] (0,0)
+        -- ++({2.2*cos(\alph)},{2.2*sin(\alph)}) node[right] {$\bar{x}$};
+  \draw[->,thick,blue!75!black] (0,0)
+        -- ++({-2.2*sin(\alph)},{2.2*cos(\alph)}) node[above left] {$\bar{y}$};
+
+  %% Angle arc and label
+  \draw (1.2,0) arc[start angle=0, end angle=\alph, radius=1.2];
+  \node at ({1.5*cos(\alph/2)},{1.5*sin(\alph/2)}) {$\alpha$};
+
+  %% Global DOFs at node 2
+  \draw[->,dashed,thick,red!65!black]
+        ({4.5*cos(\alph)},{4.5*sin(\alph)}) -- ++(1.1,0) node[right] {\small $u_2$};
+  \draw[->,dashed,thick,red!65!black]
+        ({4.5*cos(\alph)},{4.5*sin(\alph)}) -- ++(0,1.1) node[above] {\small $v_2$};
+
+\end{tikzpicture}
+\caption{Frame element inclined at angle $\alpha$ (CCW from the positive
+$x$-axis). Global axes $(x,y)$; local axes $(\bar{x},\bar{y})$ in blue.
+$\matr{T}_6$ rotates the global DOFs $(u_i,v_i,\theta_i)$ to local
+$(\bar{u}_i,\bar{v}_i,\theta_i)$.}
+\label{fig:frame_transform}
+\end{figure}
+
+\begin{importantbox}
+\textbf{Angle convention:} $\alpha$ is measured counter-clockwise from the
+positive $x$-axis to the element axis directed from node~1 to node~2.\\[4pt]
+\begin{tabular}{@{}ll@{\quad}l@{}}
+Horizontal beam, rightward: & $\alpha=0^\circ$,   & $c=1,\;s=0$\\
+Vertical column, upward:    & $\alpha=90^\circ$,  & $c=0,\;s=1$\\
+Vertical column, downward:  & $\alpha=-90^\circ$, & $c=0,\;s=-1$
+\end{tabular}
+\end{importantbox}
+
+The element stiffness and load vector in global coordinates are:
+\begin{equation}
+    \matr{k}^e = \matr{T}_6\transpose\,\bar{\matr{k}}^e\,\matr{T}_6 ,
+    \qquad
+    \vect{f}^e = \matr{T}_6\transpose\,\bar{\vect{f}}^e .
+    \label{eq:frame_ke_global}
+\end{equation}
+For vertical columns ($c=0$, $|s|=1$), $\matr{T}_6$ exchanges the axial
+and transverse DOF blocks: the column's axial stiffness $EA/L$ appears in
+the vertical ($v$-$v$) entries of the global stiffness, and its bending
+stiffness $12EI/L^3$ appears in the horizontal ($u$-$u$) entries.
+
+\begin{remark}
+Global assembly, boundary condition enforcement, and solution proceed
+identically to the truss (\cref{ch:truss}) and beam (\cref{ch:beam})
+chapters. The PVW and PMPE derivations for the frame element are direct
+extensions of \cref{sec:beam_pvw,sec:beam_pmpe}: replace the $4\times4$
+beam integrals with the $6\times6$ frame counterparts after applying
+$\matr{T}_6$.
+\end{remark}
