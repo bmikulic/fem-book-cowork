@@ -443,55 +443,14 @@ fprintf('|M|_max=%.4g Nmm, sigma_max=%.4g MPa\n',My_max,sig_max);
 \end{lstlisting}
 
 % ---------------------------------------------------------------
-\section{CST Element for Plane Stress}
+\section{Chapter~7 --- Two-Element CST Mesh}
 \label{lst:cst2d}
 
-\begin{lstlisting}[caption={Single CST element under plane stress (Chapter~\ref{ch:2d_continuum})},
-                   label={code:cst2d}]
-% fem_cst_2d.m -- Single CST element, plane stress
-% Example from Chapter 4
-
-clear; clc;
-
-E  = 200e9;     % Young's modulus [Pa]
-nu = 0.3;       % Poisson's ratio
-t  = 0.01;      % thickness [m]
-
-D = (E/(1-nu^2)) * [1,  nu, 0;
-                    nu,  1, 0;
-                     0,  0, (1-nu)/2];
-
-x = [0; 1; 0];
-y = [0; 0; 1];
-
-Ae = 0.5 * abs((x(2)-x(1))*(y(3)-y(1)) - (x(3)-x(1))*(y(2)-y(1)));
-fprintf('Element area: %.4f m^2\n', Ae);
-
-b = [y(2)-y(3); y(3)-y(1); y(1)-y(2)];
-c = [x(3)-x(2); x(1)-x(3); x(2)-x(1)];
-
-B = (1/(2*Ae)) * [b(1),   0, b(2),   0, b(3),   0;
-                    0, c(1),   0, c(2),   0, c(3);
-                  c(1), b(1), c(2), b(2), c(3), b(3)];
-
-ke = t * Ae * B' * D * B;
-
-sigma_app = 100e6;
-F_total   = sigma_app * 1 * t;
-f = zeros(6, 1);
-f(3) = F_total / 2;
-f(5) = F_total / 2;
-
-freeDOFs = 3:6;
-u_free = ke(freeDOFs,freeDOFs) \ f(freeDOFs);
-u = zeros(6, 1);
-u(freeDOFs) = u_free;
-
-eps_el = B * u;
-sig_el = D * eps_el;
-fprintf('sigma_x = %.4e\nsigma_y = %.4e\ntau_xy  = %.4e\n', ...
-        sig_el(1), sig_el(2), sig_el(3));
-\end{lstlisting}
+\lstinputlisting[
+    caption={Two-element CST plate in uniaxial tension
+             (\Cref{ex:cst_tension}).},
+    label={code:cst2d}
+]{matlab/fem_cst_2d.m}
 
 % ---------------------------------------------------------------
 \section{Newmark-$\beta$ Time Integration for 2-DOF System}
