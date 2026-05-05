@@ -452,67 +452,6 @@ fprintf('|M|_max=%.4g Nmm, sigma_max=%.4g MPa\n',My_max,sig_max);
     label={code:cst2d}
 ]{matlab/fem_cst_2d.m}
 
-% ---------------------------------------------------------------
-\section{Newmark-$\beta$ Time Integration for 2-DOF System}
-\label{lst:dynamics}
-
-\begin{lstlisting}[caption={Newmark-$\beta$ transient response of the 2-DOF system (Chapter~\ref{ch:dynamics})},
-                   label={code:dynamics}]
-% fem_newmark_2dof.m -- Newmark-beta time integration
-% 2-DOF mass-spring-damper system from Chapter 5
-
-clear; clc;
-
-m1 = 1500;   m2 = 1000;
-k1 = 600000; k2 = 300000;
-c1 = 1000;   c2 = 1000;
-
-M = [m1, 0; 0, m2];
-C = [c1+c2, -c2; -c2, c2];
-K = [k1+k2, -k2; -k2, k2];
-
-beta  = 1/4;
-gamma = 1/2;
-
-f_exc  = 2.031;
-omega  = 2*pi*f_exc;
-t_end  = 5;
-dt     = 1e-3;
-t_vec  = 0:dt:t_end;
-nSteps = length(t_vec);
-
-F_amp = [1000; 1200];
-F = @(t) F_amp * sin(omega * t);
-
-u    = zeros(2, 1);
-v    = zeros(2, 1);
-a    = M \ (F(0) - C*v - K*u);
-
-K_eff = K + (gamma/(beta*dt))*C + (1/(beta*dt^2))*M;
-
-U = zeros(2, nSteps);
-U(:,1) = u;
-
-for n = 1:nSteps-1
-    f_eff = F(t_vec(n+1)) ...
-        + M * (1/(beta*dt^2)*u + 1/(beta*dt)*v + (1/(2*beta)-1)*a) ...
-        + C * (gamma/(beta*dt)*u + (gamma/beta-1)*v + dt/2*(gamma/beta-2)*a);
-
-    u_new = K_eff \ f_eff;
-    a_new = 1/(beta*dt^2)*(u_new - u) - 1/(beta*dt)*v - (1/(2*beta)-1)*a;
-    v_new = v + dt*((1-gamma)*a + gamma*a_new);
-
-    U(:, n+1) = u_new;
-    u = u_new;  v = v_new;  a = a_new;
-end
-
-figure('Name','Newmark Transient Response');
-plot(t_vec, U(1,:)*1000, 'b'); hold on;
-plot(t_vec, U(2,:)*1000, 'r');
-xlabel('Time [s]'); ylabel('Displacement [mm]');
-legend('u_1(t)','u_2(t)'); grid on;
-\end{lstlisting}
-
 % ------------------------------------------------------------------
 \section*{Chapter~6 --- 2D Frame Element}
 
