@@ -53,9 +53,11 @@ with constant $E$ and $A$.
   %% Bar body
   \fill[gray!18] (0,-0.16) rectangle (6.2,0.16);
   \draw[thick] (0,-0.16) rectangle (6.2,0.16);
-  %% Distributed axial load arrows, increasing to the right
-  \foreach \x/\len in {0.65/0.30,1.30/0.38,1.95/0.46,2.60/0.54,3.25/0.62,3.90/0.70,4.55/0.78,5.20/0.86}{
-    \draw[load] (\x,0.55) -- ++(\len,0);
+  %% Distributed axial load arrows -- same length, evenly spaced.
+  %% Load magnitude is described by the equation label; the schematic
+  %% only marks the load location and direction.
+  \foreach \x in {0.55,1.25,...,5.45}{
+    \draw[load] (\x,0.55) -- ++(0.55,0);
   }
   \node[blue!70!black,above] at (3.25,0.72) {$p(x)=p_0(x/L)^2$};
   %% Free end label
