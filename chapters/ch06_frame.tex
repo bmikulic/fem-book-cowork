@@ -89,3 +89,75 @@ $\bar{N}_i$ (axial), $\bar{V}_i$ (shear), and moments $\bar{M}_i$ (red)
 are the static conjugates.}
 \label{fig:frame_element}
 \end{figure}
+
+% =============================================================================
+\section{Local Stiffness Matrix}
+\label{sec:frame_local_k}
+% =============================================================================
+
+In the local frame, axial deformation (bar action) and transverse bending
+(beam action) are decoupled: an axial displacement $\bar{u}$ produces no
+bending forces, and a transverse displacement $\bar{v}$ produces no axial
+force. The local stiffness matrix $\bar{\matr{k}}^e$ is therefore
+block-diagonal, assembling the bar stiffness (\cref{eq:bar_stiffness})
+and the Euler-Bernoulli beam stiffness (\cref{eq:beam_stiffness}) into a
+single $6\times6$ matrix:
+
+\begin{equation}
+    \bar{\matr{k}}^e =
+    \renewcommand{\arraystretch}{1.6}
+    \begin{bmatrix}
+        \dfrac{EA}{L}   & 0 & 0 & -\dfrac{EA}{L} & 0 & 0 \\
+        0 & \dfrac{12EI}{L^3} & \dfrac{6EI}{L^2} & 0 & -\dfrac{12EI}{L^3} & \dfrac{6EI}{L^2} \\
+        0 & \dfrac{6EI}{L^2} & \dfrac{4EI}{L} & 0 & -\dfrac{6EI}{L^2} & \dfrac{2EI}{L} \\
+        -\dfrac{EA}{L} & 0 & 0 & \dfrac{EA}{L} & 0 & 0 \\
+        0 & -\dfrac{12EI}{L^3} & -\dfrac{6EI}{L^2} & 0 & \dfrac{12EI}{L^3} & -\dfrac{6EI}{L^2} \\
+        0 & \dfrac{6EI}{L^2} & \dfrac{2EI}{L} & 0 & -\dfrac{6EI}{L^2} & \dfrac{4EI}{L}
+    \end{bmatrix}
+    \label{eq:frame_local_k}
+\end{equation}
+
+\begin{importantbox}
+The frame local stiffness is block-diagonal: rows and columns $\{1,4\}$
+carry the bar block ($EA/L$); rows and columns $\{2,3,5,6\}$ carry the
+beam block ($EI/L^3$ scaling). Axial and bending deformations are
+\emph{uncoupled} in the local frame.
+\end{importantbox}
+
+\begin{remark}
+The unconstrained frame element has a three-dimensional null space:
+rigid translation in $\bar{x}$, rigid translation in $\bar{y}$, and rigid
+rotation. At least three linearly independent kinematic constraints are
+needed to make the assembled stiffness non-singular.
+\end{remark}
+
+% =============================================================================
+\section{Element Load Vector}
+\label{sec:frame_load}
+% =============================================================================
+
+When distributed loads act along the element, the consistent nodal load
+vector $\bar{\vect{f}}^e$ is formed by superposing the bar and beam
+contributions derived in \cref{ch:1d,ch:beam}. For a uniform \emph{axial}
+distributed load $p_0$ (positive in $+\bar{x}$) and a uniform
+\emph{transverse} distributed load $q_0$ (positive in $+\bar{y}$):
+\begin{equation}
+    \bar{\vect{f}}^e
+    =
+    \underbrace{
+      \frac{p_0 L}{2}
+      \begin{bmatrix}1\\0\\0\\1\\0\\0\end{bmatrix}
+    }_{\text{axial}\;(\cref{eq:bar_load})}
+    +
+    \underbrace{
+      \frac{q_0 L}{12}
+      \begin{bmatrix}0\\6\\L\\0\\6\\{-L}\end{bmatrix}
+    }_{\text{transverse}\;(\cref{eq:beam_load})}
+    \label{eq:frame_load}
+\end{equation}
+The two contributions act on separate DOF subsets: the axial terms go to
+DOFs~1 and~4 ($\bar{u}$ displacements); the transverse terms go to DOFs~2,
+3, 5, and~6 ($\bar{v}$ displacements and $\theta$ rotations).
+In the worked example of \cref{sec:frame_example}, the beam (element~2)
+carries a downward transverse load, so $q_0 = -q < 0$ and $p_0 = 0$;
+the two columns carry no distributed load.
