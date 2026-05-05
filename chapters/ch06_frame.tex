@@ -195,14 +195,14 @@ truss transformation (\cref{eq:truss_T}), extended by the scalar rotation DOF.
 \begin{tikzpicture}[>=Stealth, x=1.1cm, y=1.0cm,
     disp/.style={->,thick,blue!70!black}]
 
-  \def\alph{35}
+  \def\angledeg{35}
 
   %% Element
   \draw[line width=2.5pt,gray!55]
-        (0,0) -- ({4.5*cos(\alph)},{4.5*sin(\alph)});
+        (0,0) -- ({4.5*cos(\angledeg)},{4.5*sin(\angledeg)});
   \filldraw (0,0)                        circle (3.5pt)
         node[below left=1pt] {\small\bfseries 1};
-  \filldraw ({4.5*cos(\alph)},{4.5*sin(\alph)}) circle (3.5pt)
+  \filldraw ({4.5*cos(\angledeg)},{4.5*sin(\angledeg)}) circle (3.5pt)
         node[above right=1pt] {\small\bfseries 2};
 
   %% Global axes
@@ -211,19 +211,19 @@ truss transformation (\cref{eq:truss_T}), extended by the scalar rotation DOF.
 
   %% Local axes
   \draw[->,thick,blue!75!black] (0,0)
-        -- ++({2.2*cos(\alph)},{2.2*sin(\alph)}) node[right] {$\bar{x}$};
+        -- ++({2.2*cos(\angledeg)},{2.2*sin(\angledeg)}) node[right] {$\bar{x}$};
   \draw[->,thick,blue!75!black] (0,0)
-        -- ++({-2.2*sin(\alph)},{2.2*cos(\alph)}) node[above left] {$\bar{y}$};
+        -- ++({-2.2*sin(\angledeg)},{2.2*cos(\angledeg)}) node[above left] {$\bar{y}$};
 
   %% Angle arc and label
-  \draw (1.2,0) arc[start angle=0, end angle=\alph, radius=1.2];
-  \node at ({1.5*cos(\alph/2)},{1.5*sin(\alph/2)}) {$\alpha$};
+  \draw (1.2,0) arc[start angle=0, end angle=\angledeg, radius=1.2];
+  \node at ({1.5*cos(\angledeg/2)},{1.5*sin(\angledeg/2)}) {$\alpha$};
 
   %% Global DOFs at node 2
   \draw[->,dashed,thick,red!65!black]
-        ({4.5*cos(\alph)},{4.5*sin(\alph)}) -- ++(1.1,0) node[right] {\small $u_2$};
+        ({4.5*cos(\angledeg)},{4.5*sin(\angledeg)}) -- ++(1.1,0) node[right] {\small $u_2$};
   \draw[->,dashed,thick,red!65!black]
-        ({4.5*cos(\alph)},{4.5*sin(\alph)}) -- ++(0,1.1) node[above] {\small $v_2$};
+        ({4.5*cos(\angledeg)},{4.5*sin(\angledeg)}) -- ++(0,1.1) node[above] {\small $v_2$};
 
 \end{tikzpicture}
 \caption{Frame element inclined at angle $\alpha$ (CCW from the positive
