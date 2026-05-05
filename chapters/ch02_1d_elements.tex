@@ -1618,3 +1618,175 @@ thumb that emerges is: for an element with shape functions of polynomial
 order $k$, use $n_g = k$ Gauss points to integrate $\matr{k}^e$ exactly
 on an undistorted geometry --- here $k=2$ requires $n_g=2$.
 \end{remark}
+
+\subsection{Worked Example: Cantilever Bar Under Uniform Load}
+\label{sec:ex_bar_quad}
+
+\begin{example}[Single quadratic element captures the exact solution]
+\label{ex:bar_quad}
+
+\noindent\textbf{Problem.}
+A uniform bar of length $L$ and axial stiffness $EA$ is fixed at $x=0$
+and free at $x=L$. A constant distributed axial load $p(x) = p_0$ acts
+along its length (\cref{fig:ex_bar_quad}). Find the nodal displacements,
+the strain at each node, and the support reaction using a \emph{single}
+three-node quadratic element. Compare the result with the analytical
+solution.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>=Stealth, x=1.0cm, y=1.0cm, thick]
+  % Hatched fixed support
+  \fill[pattern=north east lines, pattern color=gray!70]
+       (-0.5,-0.55) rectangle (0,0.55);
+  \draw (0,-0.55) -- (0,0.55);
+  % Bar
+  \draw[line width=1.6pt] (0,0) -- (8,0);
+  % Distributed load: row of horizontal arrows above the bar
+  \foreach \x in {0.4,1.2,2.0,2.8,3.6,4.4,5.2,6.0,6.8,7.6} {
+      \draw[->,blue!55!black,thick] (\x,0.85) -- ++(0.65,0);
+  }
+  \node[blue!55!black] at (4,1.40) {\small $p(x) = p_0$};
+  % Nodes
+  \filldraw (0,0) circle (3pt) node[below=4pt] {\small\bfseries 1};
+  \filldraw (4,0) circle (3pt) node[below=4pt] {\small\bfseries 2};
+  \filldraw (8,0) circle (3pt) node[below=4pt] {\small\bfseries 3};
+  % Coordinate annotations
+  \node[below=18pt] at (0,0) {\scriptsize $x = 0$};
+  \node[below=18pt] at (4,0) {\scriptsize $x = L/2$};
+  \node[below=18pt] at (8,0) {\scriptsize $x = L$};
+  \draw[->] (-0.5,-1.5) -- (8.6,-1.5) node[below right] {$x$};
+\end{tikzpicture}
+\caption{Cantilever bar under uniform axial load $p_0$, modelled by a
+single 3-node quadratic element. Nodes 1, 2, 3 lie at
+$x = 0,\,L/2,\,L$.}
+\label{fig:ex_bar_quad}
+\end{figure}
+
+\medskip
+\noindent\textbf{Step 1: Element matrices.}
+With the interior node placed at the geometric midpoint, the element
+stiffness and consistent load vector are taken directly from
+\cref{eq:bar_stiffness_quad,eq:bar_load_quad}:
+\[
+    \matr{k}^e = \frac{EA}{3L}\!
+    \begin{bmatrix*}[r]
+         7 & -8 &  1 \\
+        -8 & 16 & -8 \\
+         1 & -8 &  7
+    \end{bmatrix*},
+    \qquad
+    \vect{f}^e = \frac{p_0 L}{6}\!\begin{bmatrix} 1 \\ 4 \\ 1 \end{bmatrix} .
+\]
+With a single element, $\stiff = \matr{k}^e$ and $\vect{f} = \vect{f}^e$.
+
+\medskip
+\noindent\textbf{Step 2: Boundary conditions and reduced system.}
+The clamp enforces $u_1 = 0$. Eliminating the first row and column of
+the global system leaves the two free DOFs $\{u_2, u_3\}$ governed by
+\begin{equation*}
+    \frac{EA}{3L}
+    \begin{bmatrix*}[r] 16 & -8 \\ -8 & 7 \end{bmatrix*}
+    \begin{bmatrix} u_2 \\ u_3 \end{bmatrix}
+    = \frac{p_0 L}{6}\begin{bmatrix} 4 \\ 1 \end{bmatrix} .
+\end{equation*}
+Multiplying both sides by $3L/(EA)$ collects the dimensional groups on
+the right-hand side:
+\begin{equation*}
+    \begin{bmatrix*}[r] 16 & -8 \\ -8 & 7 \end{bmatrix*}
+    \begin{bmatrix} u_2 \\ u_3 \end{bmatrix}
+    = \frac{p_0 L^2}{2\,EA}\!\begin{bmatrix} 4 \\ 1 \end{bmatrix} .
+\end{equation*}
+
+\medskip
+\noindent\textbf{Step 3: Solve.}
+The $2\times2$ system has determinant $16\cdot 7 - 64 = 48$ and inverse
+$\tfrac{1}{48}\bigl[\begin{smallmatrix} 7 & 8 \\ 8 & 16 \end{smallmatrix}\bigr]$.
+Hence
+\begin{equation*}
+    \begin{bmatrix} u_2 \\ u_3 \end{bmatrix}
+    = \frac{1}{48}\!
+      \begin{bmatrix*}[r] 7 & 8 \\ 8 & 16 \end{bmatrix*}
+      \frac{p_0 L^2}{2\,EA}\!\begin{bmatrix} 4 \\ 1 \end{bmatrix}
+    = \frac{p_0 L^2}{96\,EA}\!\begin{bmatrix} 36 \\ 48 \end{bmatrix} ,
+\end{equation*}
+so
+\begin{equation}
+    u_1 = 0, \qquad
+    u_2 = \frac{3\,p_0 L^2}{8\,EA}, \qquad
+    u_3 = \frac{p_0 L^2}{2\,EA} .
+    \label{eq:ex_bar_quad_disp}
+\end{equation}
+
+\medskip
+\noindent\textbf{Step 4: Strain recovery.}
+Evaluating $\matr{B}(\xi) = (1/L)[2\xi-1,\;-4\xi,\;2\xi+1]$
+(\cref{eq:bar_B_quad}) at the three nodes ($\xi = -1, 0, +1$) and
+applying $\varepsilon = \matr{B}\,\vect{u}^e$:
+\begin{align*}
+    \matr{B}(-1) &= \tfrac{1}{L}\!\begin{bmatrix} -3 & 4 & -1 \end{bmatrix}, &
+    \varepsilon_1 &= \frac{4\,u_2 - u_3}{L}
+                  = \frac{p_0 L}{EA},\\[2pt]
+    \matr{B}(\,0) &= \tfrac{1}{L}\!\begin{bmatrix} -1 & 0 & +1 \end{bmatrix}, &
+    \varepsilon_2 &= \frac{u_3}{L}
+                  = \frac{p_0 L}{2\,EA},\\[2pt]
+    \matr{B}(+1) &= \tfrac{1}{L}\!\begin{bmatrix} +1 & -4 & +3 \end{bmatrix}, &
+    \varepsilon_3 &= \frac{-4\,u_2 + 3\,u_3}{L} = 0 .
+\end{align*}
+The strain decreases linearly from $p_0 L/EA$ at the clamp to zero at
+the free end --- exactly what the equilibrium equation $-EA u'' = p_0$
+predicts.
+
+\medskip
+\noindent\textbf{Step 5: Reaction at the fixed support.}
+The reaction is the residual of the first row of the unmodified
+element equation,
+\begin{equation*}
+    R_1
+    = \frac{EA}{3L}\bigl(7\,u_1 - 8\,u_2 + u_3\bigr) - \frac{p_0 L}{6}
+    = \frac{EA}{3L}\!\left(
+            -\frac{3\,p_0 L^2}{EA} + \frac{p_0 L^2}{2\,EA}
+        \right) - \frac{p_0 L}{6}
+    = -\,p_0 L .
+\end{equation*}
+The minus sign indicates a leftward pull at the clamp. Global
+equilibrium is satisfied: the applied total $\int_0^{L}\!p_0\,\dd x = p_0 L$
+is balanced exactly by $-R_1$.
+
+\medskip
+\noindent\textbf{Step 6: Comparison with the exact solution.}
+Solving the strong form $-EA\,u''(x) = p_0$ with $u(0)=0$ and
+$EA\,u'(L)=0$ gives
+\begin{equation}
+    u_{\text{exact}}(x) = \frac{p_0}{EA}\!\left(L\,x - \tfrac{1}{2}x^2\right),
+    \qquad
+    \varepsilon_{\text{exact}}(x) = \frac{p_0}{EA}(L - x) .
+    \label{eq:ex_bar_quad_exact}
+\end{equation}
+Sampling at the three nodes,
+\[
+    u_{\text{exact}}(0) = 0, \qquad
+    u_{\text{exact}}(L/2) = \frac{3\,p_0 L^2}{8\,EA}, \qquad
+    u_{\text{exact}}(L) = \frac{p_0 L^2}{2\,EA},
+\]
+which agrees \emph{exactly} with the FE displacements
+\cref{eq:ex_bar_quad_disp}. The same is true of the strain field at the
+nodes.
+
+\begin{remark}
+The single 3-node element recovers the analytical solution
+\emph{everywhere on the bar}, not only at the nodes, because
+$u_{\text{exact}}(x)$ is itself a polynomial of degree~$2$ --- exactly
+the polynomial space spanned by the three element shape functions
+\cref{eq:bar_shape_quad}. Refining the mesh would change nothing.
+
+For loadings whose exact solution lies outside the element's polynomial
+space --- a linearly varying $p(x) = p_0\,x/L$ produces a cubic
+$u_{\text{exact}}(x)$, for example --- the 3-node element remains
+\emph{nodally} exact (a structural property of 1D constant-coefficient
+Galerkin problems) but is only an interior approximation to the true
+field. Capturing such cases more accurately requires either mesh
+refinement or higher-order shape functions.
+\end{remark}
+
+\end{example}
