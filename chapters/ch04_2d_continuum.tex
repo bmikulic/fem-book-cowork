@@ -660,4 +660,89 @@ GP & $(\xi,\eta)$ & $J_{12}=15{-}7\eta$ & $J_{22}=15{-}7\xi$
 \end{tabular}
 \end{table}
 
+\medskip
+\noindent\textbf{Step 4: Strain-displacement matrix at GP1.}
+
+The physical derivatives $\partial N_i/\partial x$ and $\partial N_i/\partial y$
+follow from $[\partial N/\partial x,\; \partial N/\partial y]\transpose =
+\matr{J}^{-1}[\partial N/\partial\xi,\; \partial N/\partial\eta]\transpose$.
+At GP1 $(\xi\!=\!\eta\!=\!-g)$, substituting $J^{-1}_{12} = -1/24$
+and $J^{-1}_{22} = 1/19.04$ (\cref{eq:Jinv_cook}):
+
+\begin{align*}
+    \frac{\partial N_i}{\partial x}
+    &= \frac{1}{24}\frac{\partial N_i}{\partial\xi}
+      -\frac{1}{24}\frac{\partial N_i}{\partial\eta},\\[4pt]
+    \frac{\partial N_i}{\partial y}
+    &= \frac{1}{19.04}\frac{\partial N_i}{\partial\eta}.
+\end{align*}
+
+Evaluating for all four nodes yields (in $10^{-3}\ \text{mm}^{-1}$):
+\[
+    \frac{\partial\vect{N}}{\partial x}
+    = [0,\; 20.83,\; 0,\; -20.83],\qquad
+    \frac{\partial\vect{N}}{\partial y}
+    = [-20.71,\; -5.549,\; 5.549,\; 20.71]
+\]
+
+Assembling $\matr{B} = \matr{B}(\xi,\eta)$ at GP1:
+\begin{equation}
+    \matr{B}(\text{GP1}) = 10^{-3}\times
+    \begin{bmatrix}
+         0     & 0      & 20.83  & 0      & 0     & 0     & -20.83 & 0     \\
+         0     & -20.71 & 0      & -5.549 & 0     & 5.549 & 0      & 20.71 \\
+       -20.71  & 0      & -5.549 & 20.83  & 5.549 & 0     & 20.71  & -20.83
+    \end{bmatrix}\ \text{mm}^{-1}
+    \label{eq:B_q4_gp1}
+\end{equation}
+
+\begin{remark}
+Unlike the CST where $\matr{B}$ is constant, the Q4 $\matr{B}(\xi,\eta)$
+changes at every Gauss point because the physical derivatives depend on
+$\matr{J}^{-1}(\xi,\eta)$, which varies over the element. Gauss quadrature
+is therefore \emph{essential} --- no closed-form integral exists.
+\end{remark}
+
+\medskip
+\noindent\textbf{Step 5: Constitutive matrix.}
+
+\begin{equation}
+    \matr{D} = \frac{70{,}000}{1-0.09}
+    \begin{bmatrix}1&0.3&0\\0.3&1&0\\0&0&0.35\end{bmatrix}
+    =
+    \begin{bmatrix}
+        76{,}923 & 23{,}077 & 0 \\
+        23{,}077 & 76{,}923 & 0 \\
+        0 & 0 & 26{,}923
+    \end{bmatrix}\ \text{N/mm}^2
+    \label{eq:D_q4_ex}
+\end{equation}
+
+\medskip
+\noindent\textbf{Step 6: Element stiffness matrix.}
+
+The $8\times8$ element stiffness is accumulated over the four Gauss points
+(\cref{eq:q4_stiffness}), with all weights $w_i = 1$:
+\[
+    \matr{k}^e = t\sum_{p=1}^{4} \matr{B}_p\transpose\,\matr{D}\,\matr{B}_p\,
+    \det|\matr{J}_p|
+\]
+Since $\matr{B}$ varies at each Gauss point, this sum must be computed
+numerically (\Cref{lst:q4cook}). The MATLAB-verified result is:
+
+\begin{equation}
+    \matr{k}^e = 10^3\times
+    \begin{bmatrix*}[r]
+         14.33 &  -1.28 &   0.98 &  -9.95 &  -0.98 &  -3.51 & -14.33 &  14.74 \\
+         -1.28 &  34.78 &  -8.02 &  19.75 &  -3.51 & -19.75 &  12.82 & -34.78 \\
+          0.98 &  -8.02 &  85.76 & -34.66 & -37.68 &  21.20 & -49.06 &  21.49 \\
+         -9.95 &  19.75 & -34.66 &  77.89 &  23.13 & -61.06 &  21.49 & -36.58 \\
+         -0.98 &  -3.51 & -37.68 &  23.13 &  37.68 &  -9.66 &   0.98 &  -9.95 \\
+         -3.51 & -19.75 &  21.20 & -61.06 &  -9.66 &  61.06 &  -8.02 &  19.75 \\
+        -14.33 &  12.82 & -49.06 &  21.49 &   0.98 &  -8.02 &  62.40 & -26.28 \\
+         14.74 & -34.78 &  21.49 & -36.58 &  -9.95 &  19.75 & -26.28 &  51.60
+    \end{bmatrix*}\ \tfrac{\text{N}}{\text{mm}}
+    \label{eq:ke_q4_cook}
+\end{equation}
+
 \end{example}
