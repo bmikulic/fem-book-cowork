@@ -863,7 +863,7 @@ Writing all four rows simultaneously:
 
 \begin{importantbox}
 The Galerkin FE formulation yields the same element matrices as direct
-derivation:
+derivation. For a uniform transverse load $q(x) = q_0$:
 \[
     \matr{k}^e_b = \int_0^L EI\,\matr{B}_b\transpose\matr{B}_b\,\dd x
     = \frac{EI}{L^3}\begin{bmatrix}
@@ -871,7 +871,7 @@ derivation:
        -12 & -6L & 12 & -6L \\ 6L & 2L^2 & -6L & 4L^2
     \end{bmatrix} ,
     \quad
-    \vect{f}^e = \int_0^L \vect{H}\transpose q\,\dd x
+    \vect{f}^e = \int_0^L \vect{H}\transpose q_0\,\dd x
     = \frac{q_0 L}{12}\begin{bmatrix}6\\L\\6\\-L\end{bmatrix} .
 \]
 \end{importantbox}
