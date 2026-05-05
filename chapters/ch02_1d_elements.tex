@@ -1299,3 +1299,322 @@ their natural derivatives, a Jacobian, an inverse Jacobian for the
 chain rule, and a sum (or integral) over the parent domain. The 1D
 derivation in this section is a complete dress rehearsal for that more
 general case.
+
+\section{Three-Node Quadratic Rod Element}
+\label{sec:bar_3node}
+
+The two-node bar of \cref{sec:isoparametric_1d} carries a linear
+displacement field and therefore a constant strain --- adequate for a
+uniform $p_0$ on a constant cross-section, but unable to represent the
+parabolic displacement that arises whenever the distributed load varies
+with $x$ or $EA$ varies along the element. Adding a third node at the
+interior of the element produces a \emph{quadratic} (parabolic) bar
+element with a linear strain field, a stiffness matrix whose entries can
+no longer be evaluated by inspection, and a consistent load vector that
+distributes a uniform $p_0$ in the familiar Simpson-rule pattern $1{:}4{:}1$.
+This is the simplest non-trivial setting in which to introduce
+\emph{Gauss--Legendre numerical integration}, the workhorse of every
+isoparametric finite-element code.
+
+\subsection{Quadratic Lagrange Shape Functions}
+\label{sec:bar_shape_quad}
+
+Place three nodes at the parent points $\xi_1 = -1$, $\xi_2 = 0$,
+$\xi_3 = +1$ and demand that each shape function $N_i(\xi)$ be a
+quadratic polynomial satisfying $N_i(\xi_j) = \delta_{ij}$. The unique
+solution is the Lagrange triple
+\begin{equation}
+    N_1(\xi) = \tfrac{1}{2}\xi(\xi-1), \qquad
+    N_2(\xi) = 1 - \xi^2, \qquad
+    N_3(\xi) = \tfrac{1}{2}\xi(\xi+1) ,
+    \label{eq:bar_shape_quad}
+\end{equation}
+which collectively form a partition of unity, $N_1 + N_2 + N_3 \equiv 1$.
+\Cref{fig:bar_shape_quad} plots the three functions on the parent
+interval; each rises to unity at its own node and vanishes at the other
+two.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[x=3.6cm, y=2.4cm]
+  % Axes
+  \draw[->] (-1.20,0) -- (1.25,0) node[right] {$\xi$};
+  \draw[->] (-1.10,-0.30) -- (-1.10,1.20) node[above] {$N_i(\xi)$};
+  % Tick marks on xi-axis
+  \foreach \x/\lab in {-1/{-1},-0.5/{-1/2},0/0,0.5/{1/2},1/1} {
+      \draw (\x,0.02) -- (\x,-0.02) node[below=1pt] {\scriptsize $\lab$};
+  }
+  % Tick marks on N-axis
+  \foreach \y/\lab in {0.5/{1/2},1/1} {
+      \draw (-1.10+0.015,\y) -- (-1.10-0.015,\y) node[left=1pt] {\scriptsize $\lab$};
+  }
+  % Zero line for clarity
+  \draw[gray!50, thin] (-1,0) -- (1,0);
+  % N1 = (1/2) xi (xi-1)
+  \draw[blue!70!black, very thick, smooth, samples=61, domain=-1:1]
+        plot (\x,{0.5*\x*(\x-1)});
+  \node[blue!70!black] at (-0.78, 0.78) {$N_1$};
+  % N2 = 1 - xi^2
+  \draw[red!75!black, very thick, smooth, samples=61, domain=-1:1]
+        plot (\x,{1-\x*\x});
+  \node[red!75!black] at (0.05, 1.08) {$N_2$};
+  % N3 = (1/2) xi (xi+1)
+  \draw[teal!60!black, very thick, smooth, samples=61, domain=-1:1]
+        plot (\x,{0.5*\x*(\x+1)});
+  \node[teal!60!black] at (0.78, 0.78) {$N_3$};
+  % Nodal markers
+  \filldraw (-1,0) circle (1.6pt);
+  \filldraw  (0,0) circle (1.6pt);
+  \filldraw  (1,0) circle (1.6pt);
+\end{tikzpicture}
+\caption{Quadratic Lagrange shape functions on the parent domain
+$\xi\in[-1,1]$. Each $N_i$ equals~$1$ at its own node and~$0$ at the
+others; the three sum identically to one. The end-node functions
+$N_1$ and $N_3$ dip slightly below zero between $\xi=\pm 1/2$ and the
+opposite end, reaching a minimum of $-1/8$.}
+\label{fig:bar_shape_quad}
+\end{figure}
+
+The natural-coordinate derivatives are linear in $\xi$:
+\begin{equation}
+    \frac{\dd N_1}{\dd\xi} = \xi - \tfrac{1}{2}, \qquad
+    \frac{\dd N_2}{\dd\xi} = -2\xi, \qquad
+    \frac{\dd N_3}{\dd\xi} = \xi + \tfrac{1}{2} ,
+    \label{eq:bar_dN_quad}
+\end{equation}
+and they sum to zero, as required for a partition of unity.
+
+\subsection{Geometry, Jacobian, and Strain}
+
+The same three functions interpolate both the geometry and the
+displacement (the isoparametric postulate),
+\begin{equation}
+    x(\xi) = \sum_{i=1}^{3} N_i(\xi)\,x_i ,
+    \qquad
+    u(\xi) = \sum_{i=1}^{3} N_i(\xi)\,u_i = \vect{N}(\xi)\,\vect{u}^e ,
+    \label{eq:bar_iso_quad}
+\end{equation}
+with $\vect{u}^e = [u_1,u_2,u_3]\transpose$. Locating the interior node
+at the geometric midpoint, $x_1 = 0$, $x_2 = L/2$, $x_3 = L$, the
+quadratic terms in $x(\xi)$ cancel exactly:
+\begin{equation*}
+    x(\xi)
+    = \tfrac{L}{2}(1-\xi^2) + L\,\tfrac{1}{2}\xi(\xi+1)
+    = \tfrac{L}{2}(1+\xi),
+\end{equation*}
+so the Jacobian is the same constant as for the linear bar,
+\begin{equation}
+    J = \frac{\dd x}{\dd\xi} = \frac{L}{2} ,
+    \qquad
+    J^{-1} = \frac{2}{L} .
+    \label{eq:jacobian_quad}
+\end{equation}
+For an interior node displaced from the midpoint, $J(\xi)$ becomes a
+linear function of $\xi$ and the integrals below acquire an additional
+$\xi$-dependence. The 2D analogue, where the Jacobian varies through the
+element regardless of node placement, is the Q4 of \cref{ch:2d_continuum}.
+
+The strain matrix follows from the chain rule
+$\matr{B}(\xi) = J^{-1}\,\dd\vect{N}/\dd\xi$:
+\begin{equation}
+    \matr{B}(\xi) =
+    \frac{1}{L}\begin{bmatrix} 2\xi-1 & -4\xi & 2\xi+1 \end{bmatrix} .
+    \label{eq:bar_B_quad}
+\end{equation}
+$\matr{B}$ is now \emph{linear} in $\xi$, so the strain
+$\varepsilon(\xi) = \matr{B}(\xi)\,\vect{u}^e$ varies along the element.
+At the three nodal points,
+$\varepsilon(-1) = (-3 u_1 + 4 u_2 - u_3)/L$,
+$\varepsilon( 0) = (-u_1 + u_3)/L$ (the midpoint average), and
+$\varepsilon(+1) = (u_1 - 4 u_2 + 3 u_3)/L$ --- a clear improvement over
+the constant strain of the linear bar.
+
+\subsection{Gauss--Legendre Quadrature}
+\label{sec:gauss_legendre}
+
+The element stiffness now requires an integral that is no longer
+constant in $\xi$:
+\begin{equation}
+    \matr{k}^e
+    = \int_{-1}^{+1} \matr{B}(\xi)\transpose\,EA\,\matr{B}(\xi)\,J\,\dd\xi ,
+\end{equation}
+and each entry of the integrand $\matr{B}\transpose\matr{B}$ is a
+quadratic polynomial in $\xi$. Although these particular integrals can
+be evaluated by hand using $\int_{-1}^{1}\xi^2\dd\xi = 2/3$, the standard
+practice in finite-element codes --- and the \emph{only} option once one
+moves to higher-order, distorted, or two-dimensional elements --- is to
+replace the integral by a discrete sum:
+\begin{equation}
+    \int_{-1}^{+1} g(\xi)\,\dd\xi \;\approx\;
+    \sum_{p=1}^{n_g} w_p\,g(\xi_p) .
+    \label{eq:gauss_rule}
+\end{equation}
+The \emph{Gauss--Legendre} rule with $n_g$ points selects $\{\xi_p,w_p\}$
+so that any polynomial of degree $\leq 2n_g - 1$ is integrated
+\emph{exactly}. Equivalently, $n_g$ Gauss points integrate exactly an
+integrand whose entries are polynomials of degree $\leq 2n_g - 1$ ---
+the highest accuracy any rule with $n_g$ function evaluations can
+achieve. The first three rules are listed in \cref{tab:gauss_1d}.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Gauss--Legendre points and weights on $[-1,1]$, and the highest
+polynomial degree they integrate exactly.}
+\label{tab:gauss_1d}
+\begin{tabular}{@{}cccc@{}}
+\toprule
+$n_g$ & Points $\xi_p$ & Weights $w_p$ & Exact for degree $\leq$ \\
+\midrule
+$1$ & $0$                                              & $2$            & $1$ \\
+$2$ & $\pm 1/\sqrt{3} \approx \pm 0.5774$              & $1,\;1$        & $3$ \\
+$3$ & $0,\; \pm\sqrt{3/5} \approx \pm 0.7746$          & $8/9,\;5/9,\;5/9$ & $5$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Element Stiffness Matrix by Two-Point Gauss}
+\label{sec:bar_ke_quad}
+
+Substituting \cref{eq:bar_B_quad} and $J = L/2$,
+\begin{equation}
+    \matr{k}^e
+    = \frac{EA}{2L}\!\int_{-1}^{+1}\!
+    \begin{bmatrix} 2\xi-1 \\ -4\xi \\ 2\xi+1 \end{bmatrix}
+    \begin{bmatrix} 2\xi-1 & -4\xi & 2\xi+1 \end{bmatrix} \dd\xi .
+    \label{eq:bar_ke_integrand_quad}
+\end{equation}
+Each entry of the outer product is a polynomial of degree~$2$ in $\xi$.
+The smallest Gauss rule that integrates degree~$2$ polynomials exactly
+is $n_g = 2$ (\cref{tab:gauss_1d}); its points and weights are
+$\xi_{1,2} = \mp 1/\sqrt{3}$ and $w_1 = w_2 = 1$. Writing
+$g \equiv 1/\sqrt{3}$ and evaluating the row $\matr{B}(\xi)\,L$ at the
+two Gauss points,
+\begin{equation*}
+    \matr{B}(-g)\,L = \begin{bmatrix} -2g-1 & 4g & -2g+1 \end{bmatrix}, \quad
+    \matr{B}(+g)\,L = \begin{bmatrix}  2g-1 & -4g &  2g+1 \end{bmatrix}.
+\end{equation*}
+Forming the symmetric matrix
+$\matr{B}(\xi_p)\transpose\matr{B}(\xi_p)$ at each point and summing,
+\begin{equation}
+    \matr{k}^e
+    = \frac{EA}{2L}\sum_{p=1}^{2} w_p\,
+      \bigl[\matr{B}(\xi_p)\,L\bigr]\transpose\!
+      \bigl[\matr{B}(\xi_p)\,L\bigr] ,
+\end{equation}
+where the explicit factor $L^2$ has been moved outside to keep the inner
+matrices dimensionless. Each entry contains terms in $g^2 = 1/3$ and
+linear $g$-terms that cancel between $\xi=-g$ and $\xi=+g$. For example,
+the $(1,1)$ entry evaluates to $(-2g-1)^2 + (2g-1)^2 = 8g^2 + 2 = 14/3$.
+Carrying out the analogous algebra for all six independent entries gives
+\begin{equation}
+    \sum_{p=1}^{2}
+    \bigl[\matr{B}(\xi_p)\,L\bigr]\transpose\!\bigl[\matr{B}(\xi_p)\,L\bigr]
+    = \frac{1}{3}\!
+    \begin{bmatrix*}[r]
+        14 & -16 &   2 \\
+       -16 &  32 & -16 \\
+         2 & -16 &  14
+    \end{bmatrix*}.
+\end{equation}
+Multiplying through by $EA/(2L)$ and clearing the common factor $2$ in
+every entry yields the standard quadratic-bar stiffness:
+
+\begin{importantbox}
+\begin{equation}
+    \matr{k}^e = \frac{EA}{3L}\!
+    \begin{bmatrix*}[r]
+        7 & -8 &  1 \\
+       -8 & 16 & -8 \\
+        1 & -8 &  7
+    \end{bmatrix*} .
+    \label{eq:bar_stiffness_quad}
+\end{equation}
+\end{importantbox}
+
+\noindent The 2-point rule is exact here because the integrand is
+quadratic and $2n_g - 1 = 3 \geq 2$; analytical integration gives
+exactly the same matrix. The MATLAB script \Cref{lst:bar1d} can be
+modified by replacing the linear shape functions with
+\cref{eq:bar_shape_quad}, looping over two Gauss points, and accumulating
+the contributions $w_p \matr{B}(\xi_p)\transpose\matr{D}\matr{B}(\xi_p)\,J$
+to recover \cref{eq:bar_stiffness_quad} numerically.
+
+\subsection{Consistent Load Vector}
+
+For a uniform distributed axial load $p(x) = p_0$, the consistent load
+vector follows from the same change of variables:
+\begin{equation}
+    \vect{f}^e
+    = \int_{-1}^{+1} \vect{N}(\xi)\transpose\,p_0\,J\,\dd\xi
+    = p_0\,\frac{L}{2}\!\int_{-1}^{+1}\!\!
+      \begin{bmatrix} \tfrac{1}{2}\xi(\xi-1) \\ 1-\xi^2 \\
+                      \tfrac{1}{2}\xi(\xi+1) \end{bmatrix} \dd\xi .
+\end{equation}
+Each scalar integrand is a quadratic in $\xi$, integrated exactly by the
+same 2-point Gauss rule (or by direct use of $\int_{-1}^{1}\xi^2\dd\xi = 2/3$):
+\[
+    \int_{-1}^{+1}\!\!\tfrac{1}{2}\xi(\xi\mp 1)\,\dd\xi = \tfrac{1}{3},
+    \qquad
+    \int_{-1}^{+1}\!\!(1-\xi^2)\,\dd\xi = \tfrac{4}{3} .
+\]
+Hence
+\begin{equation}
+    \vect{f}^e = \frac{p_0 L}{6}\!
+    \begin{bmatrix} 1 \\ 4 \\ 1 \end{bmatrix} .
+    \label{eq:bar_load_quad}
+\end{equation}
+Total force, $p_0 L$, is recovered as $\tfrac{1}{6}p_0 L (1+4+1)$, and the
+weighting $1{:}4{:}1$ is exactly Simpson's rule for evaluating the
+integral of $p_0$ from $0$ to $L$ at three equally-spaced sample points
+--- a numerical coincidence that reflects the underlying quadratic
+interpolation on both sides.
+
+\subsection{Why Two Gauss Points: Spurious Modes from Under-Integration}
+\label{sec:underintegration}
+
+It is tempting to use a single Gauss point for $\matr{k}^e$ to save work
+--- after all, one evaluation of $\matr{B}$ is faster than two. The
+1-point rule is, however, only exact for polynomials of degree $\leq 1$
+(\cref{tab:gauss_1d}), and our integrand is degree~$2$. The error has a
+striking consequence.
+
+Evaluating $\matr{B}$ at the single Gauss point $\xi_1 = 0$,
+$w_1 = 2$:
+\begin{equation*}
+    \matr{B}(0) = \frac{1}{L}\begin{bmatrix} -1 & 0 & +1 \end{bmatrix} .
+\end{equation*}
+The mid-node entry vanishes identically. Substituting into
+\cref{eq:gauss_rule},
+\begin{equation}
+    \matr{k}^e_{\text{1-pt}}
+    = \frac{EA}{2L}\cdot 2 \cdot
+      \begin{bmatrix} -1 \\ 0 \\ +1 \end{bmatrix}
+      \begin{bmatrix} -1 & 0 & +1 \end{bmatrix}
+    = \frac{EA}{L}\!
+      \begin{bmatrix*}[r]
+          1 & 0 & -1 \\
+          0 & 0 &  0 \\
+         -1 & 0 &  1
+      \end{bmatrix*} .
+    \label{eq:ke_1pt}
+\end{equation}
+This matrix has rank one. Its null space contains the legitimate
+rigid-body translation $\vect{u}^e = [1,1,1]\transpose$ \emph{and} the
+spurious vector $\vect{u}^e = [0,1,0]\transpose$: the mid-node may
+translate freely while the end nodes remain fixed, with no internal
+strain energy generated by the under-integrated stiffness. This is the
+1D analogue of the famous \emph{hourglass mode} that plagues
+under-integrated elements in 2D and 3D.
+
+\begin{remark}
+The 1-point rule misses precisely the energy associated with the
+linearly varying part of $\varepsilon(\xi)$: it sees only the average
+strain $\varepsilon(0) = (u_3 - u_1)/L$, to which the mid-node
+displacement contributes nothing. Two Gauss points sample the strain
+field at $\xi = \pm 1/\sqrt{3}$, where the mid-node \emph{does} affect
+$\varepsilon$, and the rank deficiency disappears. The simple rule of
+thumb that emerges is: for an element with shape functions of polynomial
+order $k$, use $n_g = k$ Gauss points to integrate $\matr{k}^e$ exactly
+on an undistorted geometry --- here $k=2$ requires $n_g=2$.
+\end{remark}
