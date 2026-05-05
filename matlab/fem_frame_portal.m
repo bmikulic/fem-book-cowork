@@ -173,6 +173,7 @@ end
 xlabel('x (mm)'); ylabel('y (mm)');
 title('M (blue), V (red), N (green)');
 
+book_style(fig);
 exportgraphics(fig, '../figures/frame_portal_results.pdf', 'ContentType', 'vector');
 exportgraphics(fig, '../figures/frame_portal_results.png', 'Resolution', 300);
 fprintf('\nFigures saved to ../figures/\n');

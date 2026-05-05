@@ -132,6 +132,7 @@ ylabel('y [mm]', 'FontSize', 12);
 title(sprintf('Deformed shape (magnification \\times %d)', scale), 'FontSize', 12);
 legend('Undeformed', 'Elem 1 def.', 'Elem 2 def.', 'Elem 3 def.', ...
        'Nodes orig.', 'Nodes def.', 'Location', 'best');
+book_style(gcf);
 exportgraphics(gcf, '../figures/truss2d_deformed.pdf', 'ContentType', 'vector');
 exportgraphics(gcf, '../figures/truss2d_deformed.png', 'Resolution', 300);
 fprintf('\nFigures saved to ../figures/truss2d_deformed.pdf/.png\n');

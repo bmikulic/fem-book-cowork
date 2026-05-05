@@ -206,6 +206,7 @@ plot(x_all, Qz_all*1e-3, 'm-', 'LineWidth', 2);
 xlabel('x [mm]'); ylabel('Q [kN]');
 title('Shear force'); grid on; yline(0,'k--');
 
+book_style(gcf);
 exportgraphics(gcf,'../figures/beam_continuous_results.pdf','ContentType','vector');
 exportgraphics(gcf,'../figures/beam_continuous_results.png','Resolution',300);
 fprintf('\nFigures saved.\n');

@@ -106,6 +106,7 @@ xlabel('x (mm)'); ylabel('y (mm)')
 title(sprintf('Q4 Cook membrane: undeformed (solid) and deformed (dashed, \\times%d)', scale))
 legend({'Undeformed','Deformed'}, 'Location','northwest')
 
+book_style(fig);
 exportgraphics(fig, '../figures/q4_cook_results.pdf', 'ContentType','vector')
 exportgraphics(fig, '../figures/q4_cook_results.png', 'Resolution', 300)
 fprintf('\nFigures saved to ../figures/\n')

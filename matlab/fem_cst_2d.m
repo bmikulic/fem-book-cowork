@@ -93,6 +93,7 @@ xlabel('x (m)'); ylabel('y (m)')
 title(sprintf('CST mesh (solid) and deformed shape \\times%d (dashed)', scale))
 legend({'Undeformed','','Deformed (\\times800)',''}, 'Location','northwest')
 
+book_style(fig);
 exportgraphics(fig,'../figures/cst_example_results.pdf','ContentType','vector')
 exportgraphics(fig,'../figures/cst_example_results.png','Resolution',300)
 fprintf('\nFigures saved to ../figures/\n')

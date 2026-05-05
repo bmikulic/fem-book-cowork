@@ -90,6 +90,7 @@ ylabel('u EA / (p_0 L^2)');
 legend({'Exact','FE field','FE nodes'}, 'Location','northwest');
 title('Cantilever bar -- single 3-node quadratic element');
 
+book_style(fig);
 if ~exist('../figures', 'dir'), mkdir('../figures'); end
 exportgraphics(fig, '../figures/bar_3node_results.pdf', 'ContentType','vector');
 exportgraphics(fig, '../figures/bar_3node_results.png', 'Resolution', 300);

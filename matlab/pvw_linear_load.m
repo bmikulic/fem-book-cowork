@@ -50,6 +50,7 @@ thisFile = mfilename('fullpath');
 [here,~,~] = fileparts(thisFile);
 figDir = fullfile(here, '..', 'figures');
 if ~exist(figDir, 'dir'), mkdir(figDir); end
+book_style(fig);
 exportgraphics(fig, fullfile(figDir, 'pvw_linear_load.pdf'), ...
                'ContentType','vector');
 exportgraphics(fig, fullfile(figDir, 'pvw_linear_load.png'), ...

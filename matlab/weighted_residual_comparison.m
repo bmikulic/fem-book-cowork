@@ -64,6 +64,7 @@ figDir = fullfile(here, '..', 'figures');
 if ~exist(figDir, 'dir'), mkdir(figDir); end
 
 set(figFile, 'PaperPositionMode', 'auto');
+book_style(figFile);
 exportgraphics(figFile, fullfile(figDir, 'weighted_residual_comparison.pdf'), ...
                'ContentType', 'vector');
 exportgraphics(figFile, fullfile(figDir, 'weighted_residual_comparison.png'), ...

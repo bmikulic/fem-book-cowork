@@ -129,6 +129,7 @@ xlabel('x [m]'); ylabel('M [N\cdotm]');
 title('Bending moment'); grid on;
 yline(0,'k--');
 
+book_style(gcf);
 exportgraphics(gcf,'../figures/beam_simple_results.pdf','ContentType','vector');
 exportgraphics(gcf,'../figures/beam_simple_results.png','Resolution',300);
 fprintf('Figures saved.\n');
