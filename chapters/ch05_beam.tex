@@ -17,48 +17,60 @@ stiffness $EI$, with nodes~1 and~2 as shown in \cref{fig:beam_element}.
     disp/.style={->,very thick,blue!70!black},
     force/.style={->,ultra thick,red!75!black}]
 
-  %% Beam body
-  \fill[gray!22] (0,-0.22) rectangle (7,0.22);
-  \draw[thick] (0,-0.22) rectangle (7,0.22);
-  \node[above=4pt] at (3.5,0.22) {$E,\, I$};
+  %% =============== (a) Kinematic DOFs ===============
+  \fill[gray!22] (0, -0.20) rectangle (7, 0.20);
+  \draw[thick]   (0, -0.20) rectangle (7, 0.20);
+  \node[above=2pt, font=\small] at (3.5, 0.20) {$E,\, I$};
 
-  %% Nodes
-  \filldraw (0,0) circle (3.5pt);
-  \filldraw (7,0) circle (3.5pt);
-  \node at (-0.28,-0.45) {\small\bfseries 1};
-  \node at (7.28,-0.45) {\small\bfseries 2};
+  \filldraw (0, 0) circle (3pt) node[below=5pt] {\bfseries\small 1};
+  \filldraw (7, 0) circle (3pt) node[below=5pt] {\bfseries\small 2};
 
-  %% Displacements (blue, above)
-  \draw[disp] (0, 0.65) -- ++(0,0.9) node[right=2pt,midway] {$v_1$};
-  \draw[disp] (7, 0.65) -- ++(0,0.9) node[right=2pt,midway] {$v_2$};
+  %% Transverse displacements: straight upward arrows
+  \draw[disp] (0, 0.32) -- (0, 1.05) node[right=2pt, midway] {$v_1$};
+  \draw[disp] (7, 0.32) -- (7, 1.05) node[right=2pt, midway] {$v_2$};
 
-  %% Rotations (blue curved arrows)
-  \draw[disp,->] (0.05, 1.70) arc[start angle=200, end angle=70, radius=0.55]
-        node[above left=-2pt] {$\theta_1$};
-  \draw[disp,->] (7.05, 1.70) arc[start angle=200, end angle=70, radius=0.55]
-        node[above left=-2pt] {$\theta_2$};
+  %% Rotations: CCW indicator arcs above each node
+  %% arc from 0 deg (right) sweeping counter-clockwise via top to 180 deg (left)
+  \draw[disp] ([xshift=+0.45cm]0, 1.50) arc[start angle=0, end angle=180, radius=0.45];
+  \node[blue!70!black] at (0, 2.20) {$\theta_1$};
+  \draw[disp] ([xshift=+0.45cm]7, 1.50) arc[start angle=0, end angle=180, radius=0.45];
+  \node[blue!70!black] at (7, 2.20) {$\theta_2$};
 
-  %% End forces (red, below)
-  \draw[force] (0,-0.65) -- ++(0,-0.8) node[right=2pt,midway] {$V_1$};
-  \draw[force] (7,-0.65) -- ++(0,-0.8) node[right=2pt,midway] {$V_2$};
+  \node at (3.5, -0.95) {\textbf{(a)} kinematic DOFs};
 
-  %% End moments (red curved)
-  \draw[force,->] (0.05,-1.55) arc[start angle=160, end angle=290, radius=0.55]
-        node[below left=-2pt] {$M_1$};
-  \draw[force,->] (7.05,-1.55) arc[start angle=160, end angle=290, radius=0.55]
-        node[below left=-2pt] {$M_2$};
+  %% =============== (b) Conjugate nodal forces ===============
+  \begin{scope}[yshift=-4.6cm]
+  \fill[gray!22] (0, -0.20) rectangle (7, 0.20);
+  \draw[thick]   (0, -0.20) rectangle (7, 0.20);
 
-  %% Length dimension
-  \draw[<->,thin] (0,-2.30) -- (7,-2.30)
+  \filldraw (0, 0) circle (3pt) node[below=5pt] {\bfseries\small 1};
+  \filldraw (7, 0) circle (3pt) node[below=5pt] {\bfseries\small 2};
+
+  %% End shears: straight upward arrows -- conjugate to v, same sense
+  \draw[force] (0, 0.32) -- (0, 1.05) node[right=2pt, midway] {$V_1$};
+  \draw[force] (7, 0.32) -- (7, 1.05) node[right=2pt, midway] {$V_2$};
+
+  %% End moments: CCW indicator arcs -- conjugate to theta, same sense
+  \draw[force] ([xshift=+0.45cm]0, 1.50) arc[start angle=0, end angle=180, radius=0.45];
+  \node[red!75!black] at (0, 2.20) {$M_1$};
+  \draw[force] ([xshift=+0.45cm]7, 1.50) arc[start angle=0, end angle=180, radius=0.45];
+  \node[red!75!black] at (7, 2.20) {$M_2$};
+
+  %% Length dimension below the second beam
+  \draw[<->,thin] (0, -0.85) -- (7, -0.85)
         node[fill=white,inner sep=1pt,midway] {$L$};
-  %% x-axis
-  \draw[->,thin] (-0.6,-2.70) -- (8.0,-2.70) node[right] {$x$};
+  \draw[->,thin]  (7.20, -0.85) -- (8.10, -0.85) node[right] {$x$};
+
+  \node at (3.5, -1.50) {\textbf{(b)} conjugate nodal forces};
+  \end{scope}
 
 \end{tikzpicture}
-\caption{Two-node Euler-Bernoulli beam element. Transverse displacements $v_1,v_2$
-(blue, upward positive) and rotations $\theta_1,\theta_2$ (blue, CCW positive)
-are the DOFs. End shear forces $V_1,V_2$ and bending moments $M_1,M_2$ (red)
-are the conjugate nodal forces.}
+\caption{Two-node Euler--Bernoulli beam element of length $L$ and bending
+stiffness $EI$. (a) The four kinematic DOFs: transverse displacement
+$v_i$ (upward positive) and rotation $\theta_i$ (CCW positive) at each
+node. (b) Their conjugate nodal forces: shear $V_i$ acts in the same
+upward sense as $v_i$, and bending moment $M_i$ in the same CCW sense
+as $\theta_i$.}
 \label{fig:beam_element}
 \end{figure}
 
