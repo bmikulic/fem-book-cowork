@@ -563,3 +563,64 @@ moment (blue), shear (red), and axial force (green).}
 \end{figure}
 
 \end{example}
+
+% =============================================================================
+\section{Internal Force Recovery}
+\label{sec:frame_internal}
+% =============================================================================
+
+Once the global displacement vector $\vect{u}$ is known, the internal
+forces at any point along a frame element are recovered in four steps:
+
+\begin{enumerate}
+    \item \textbf{Extract global nodal DOFs.}
+          For element $e$ connecting nodes $i$ and $j$, assemble
+          $\vect{u}^e = [u_i,\,v_i,\,\theta_i,\,u_j,\,v_j,\,\theta_j]\transpose$.
+
+    \item \textbf{Transform to local coordinates.}
+          \[
+              \bar{\vect{u}}^e = \matr{T}_6\,\vect{u}^e .
+          \]
+
+    \item \textbf{Compute local end forces.}
+          \begin{equation}
+              \bar{\vect{f}}^e_{\mathrm{int}}
+              = \bar{\matr{k}}^e\,\bar{\vect{u}}^e
+                - \bar{\vect{f}}^e_{\mathrm{load}} ,
+              \label{eq:frame_int_forces}
+          \end{equation}
+          where $\bar{\vect{f}}^e_{\mathrm{load}}$ is the element load
+          vector from \cref{eq:frame_load} (zero for elements carrying no
+          distributed load). The six components are the end axial forces,
+          shear forces, and bending moments in local coordinates.
+
+    \item \textbf{Distribute along the element.}
+          Between the ends, the internal forces vary with position
+          $\bar{x} \in [0,L]$:
+          \begin{align}
+              N(\bar{x}) &= \bar{N}_i
+                            + \frac{EA}{L}(\bar{u}_j - \bar{u}_i)
+                              \frac{\bar{x}}{L}
+                            \quad\text{(linear under axial load; constant if none)},
+                            \label{eq:frame_N_dist}\\
+              V(\bar{x}) &= \bar{V}_i + q_0\,\bar{x}
+                            \quad\text{(linear under uniform }q_0;
+                            \text{ constant if }q_0=0\text{)},
+                            \label{eq:frame_V_dist}\\
+              M(\bar{x}) &= \bar{M}_i - \bar{V}_i\,\bar{x}
+                            - \tfrac{1}{2}q_0\,\bar{x}^2
+                            \quad\text{(quadratic under }q_0;
+                            \text{ linear if }q_0=0\text{)}.
+                            \label{eq:frame_M_dist}
+          \end{align}
+\end{enumerate}
+
+\begin{remark}
+For a vertical column ($\alpha = 90^\circ$), the local $\bar{x}$ axis points
+upward and the local $\bar{y}$ axis points leftward. The local axial force
+$\bar{N}$ is therefore the vertical internal force (gravity direction) in
+the column, and the local shear $\bar{V}$ is horizontal. In the portal
+frame example, the column axial forces carry the vertical gravity load from
+the beam, while the column shear forces are in equilibrium with the applied
+lateral force $F$.
+\end{remark}
