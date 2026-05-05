@@ -375,6 +375,67 @@ The right edge moves uniformly rightward ($u_2 = u_3 = 0.5\ \text{mm}$) with
 no shear distortion. The top-right and top-left nodes contract vertically by
 $0.15\ \text{mm}$ due to the Poisson effect.
 
+\medskip
+\noindent\textbf{Step 7: Stress recovery.}
+
+For each element, the constant strain and stress vectors are:
+\[
+    \vect{\varepsilon}^e = \matr{B}^e\,\vect{u}^e, \qquad
+    \vect{\sigma}^e = \matr{D}\,\vect{\varepsilon}^e .
+\]
+
+\noindent\textit{Element~1} ($\vect{u}^{(1)} = [0,0,5\!\times\!10^{-4},0,5\!\times\!10^{-4},-1.5\!\times\!10^{-4}]\transpose$ m):
+\begin{align*}
+    \vect{\varepsilon}^{(1)} &= \matr{B}^{(1)}\vect{u}^{(1)}
+    = \begin{bmatrix}5\times10^{-4} \\ -1.5\times10^{-4} \\ 0\end{bmatrix}
+    \begin{bmatrix}\text{m/m}\\\text{m/m}\\\text{rad}\end{bmatrix} \\[4pt]
+    \vect{\sigma}^{(1)} &= \matr{D}\,\vect{\varepsilon}^{(1)}
+    = \begin{bmatrix}100 \\ 0 \\ 0\end{bmatrix}\ \text{MPa}
+\end{align*}
+
+\noindent\textit{Element~2} ($\vect{u}^{(2)} = [0,0,5\!\times\!10^{-4},-1.5\!\times\!10^{-4},0,-1.5\!\times\!10^{-4}]\transpose$ m):
+\[
+    \vect{\varepsilon}^{(2)} = \vect{\varepsilon}^{(1)}, \qquad
+    \vect{\sigma}^{(2)} = \vect{\sigma}^{(1)} =
+    \begin{bmatrix}100 \\ 0 \\ 0\end{bmatrix}\ \text{MPa}
+\]
+
+Both elements give identical stresses: the CST mesh is in a state of uniform
+$\sigma_x = 100\ \text{MPa}$, $\sigma_y = 0$, $\tau_{xy} = 0$.
+
+\medskip
+\noindent\textbf{Step 8: Analytical verification.}
+
+The exact solution for a uniformly loaded elastic plate is:
+\begin{align*}
+    \sigma_x &= \frac{F}{t \cdot L} = \frac{1\times10^6}{0.01 \times 1}
+              = 100\ \text{MPa}\ \checkmark \\
+    \sigma_y &= 0\ \checkmark, \qquad \tau_{xy} = 0\ \checkmark \\[4pt]
+    u(x,y) &= \frac{\sigma_x}{E}\,x = 5\times10^{-4}\,x\ \text{m}
+              \;\Rightarrow\; u_2 = u_3 = 5\times10^{-4}\ \text{m}\ \checkmark \\
+    v(x,y) &= -\frac{\nu\sigma_x}{E}\,y = -1.5\times10^{-4}\,y\ \text{m}
+              \;\Rightarrow\; v_3 = v_4 = -1.5\times10^{-4}\ \text{m}\ \checkmark
+\end{align*}
+
+\begin{importantbox}
+The CST recovers the \emph{exact} analytical solution for uniform stress
+states. This is because the true displacement field ($u$ linear in $x$,
+$v$ linear in $y$) lies within the CST polynomial space --- a polynomial
+that the element can represent exactly. The FEM error is zero for any
+problem whose exact solution is linear.
+\end{importantbox}
+
+The deformed mesh, magnified $\times800$, is shown in \cref{fig:cst_results}.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.62\textwidth]{figures/cst_example_results}
+\caption{CST mesh (solid) and deformed shape (dashed, magnified $\times800$).
+The right edge moves uniformly rightward; the top nodes contract downward by
+the Poisson effect. No shear distortion occurs.}
+\label{fig:cst_results}
+\end{figure}
+
 \end{example}
 
 \section{Isoparametric Quadrilateral Element (Q4)}
