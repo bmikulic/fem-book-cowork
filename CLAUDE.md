@@ -31,7 +31,7 @@ chapters/
   ch06_frame.tex          # Ch.6 2D frame element
   ch04_2d_continuum.tex   # Ch.7 2D continuum (CST, Q4 isoparametric)
 appendix/
-  matlab_listings.tex     # All MATLAB code listings, lst:bar1d / lst:stepped_bar / lst:pvw_verification / lst:beam2d / lst:cst2d / lst:frame_portal / lst:q4cook
+  matlab_listings.tex     # All MATLAB code listings, lst:bar1d / lst:stepped_bar / lst:pvw_verification / lst:bar3node / lst:beam2d / lst:cst2d / lst:frame_portal / lst:q4cook
 figures/                  # PDFs (used by LaTeX) and PNGs (for previewing) — produced by scripts in matlab/
 matlab/                   # Self-contained .m scripts; each saves PDF+PNG into ../figures/
 ```
