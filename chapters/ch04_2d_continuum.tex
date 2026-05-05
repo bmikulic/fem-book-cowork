@@ -499,3 +499,165 @@ For $2\times2$ Gauss: $n_g=2$, $\xi_i = \pm 1/\sqrt{3}$, $w_i = 1$.
     \bottomrule
 \end{tabular}
 \end{center}
+
+% =============================================================================
+\subsection{Worked Example: Single Q4 Element (Cook Membrane)}
+\label{sec:q4_example}
+% =============================================================================
+
+\begin{example}[Cook membrane --- single Q4 element under in-plane shear]
+\label{ex:q4_cook}
+
+The Cook membrane is a tapered quadrilateral plate used as a benchmark for
+2D elements. A single Q4 element discretises the plate, as shown in
+\cref{fig:q4_cook}. Material properties: $E = 70{,}000\ \text{N/mm}^2$,
+$\nu = 0.3$, $t = 1\ \text{mm}$, plane stress. The left edge is clamped
+(nodes~1 and~4). A total vertical force $P = 100\ \text{N}$ acts uniformly
+on the right edge; the consistent nodal forces are $F/2 = 50\ \text{N}$
+upward at each of nodes~2 and~3.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[>=Stealth, x=0.07cm, y=0.07cm,
+    force/.style={->,ultra thick,red!75!black}]
+
+  %% Plate outline
+  \fill[gray!12]  (0,0) -- (48,44) -- (48,60) -- (0,44) -- cycle;
+  \draw[thick]    (0,0) -- (48,44) -- (48,60) -- (0,44) -- cycle;
+
+  %% Clamped left edge
+  \fill[pattern=north east lines,pattern color=gray!70]
+       (-5,0) rectangle (0,44);
+  \draw[thick] (0,0) -- (0,44);
+
+  %% Nodes
+  \filldraw (0, 0) circle (3pt) node[left=4pt] {\small\bfseries 1 $(0,0)$};
+  \filldraw (48,44) circle (3pt) node[right=4pt] {\small\bfseries 2 $(48,44)$};
+  \filldraw (48,60) circle (3pt) node[right=4pt] {\small\bfseries 3 $(48,60)$};
+  \filldraw (0, 44) circle (3pt) node[left=4pt] {\small\bfseries 4 $(0,44)$};
+
+  %% Forces at nodes 2 and 3
+  \draw[force] (48,44) -- ++(0,14) node[right=2pt,midway] {$50\ \text{N}$};
+  \draw[force] (48,60) -- ++(0,14) node[right=2pt,midway] {$50\ \text{N}$};
+
+  %% Dimensions
+  \draw[<->,thin] (0,-8) -- (48,-8)
+       node[fill=white,inner sep=1pt,midway] {$48\ \text{mm}$};
+  \draw[<->,thin] (-10,0) -- (-10,44)
+       node[fill=white,inner sep=1pt,midway,rotate=90] {$44\ \text{mm}$};
+  \draw[<->,thin] (54,44) -- (54,60)
+       node[fill=white,inner sep=1pt,midway,rotate=90] {$16\ \text{mm}$};
+
+\end{tikzpicture}
+\caption{Single Q4 element for the Cook membrane benchmark.
+Node coordinates in mm. Left edge clamped; $50\ \text{N}$ vertical
+nodal forces at nodes~2 and~3.}
+\label{fig:q4_cook}
+\end{figure}
+
+\medskip
+\noindent\textbf{DOF ordering:}
+$[u_1,v_1,u_2,v_2,u_3,v_3,u_4,v_4] = \text{DOFs}\ [1\ldots8]$.\\
+Fixed: $\{1,2,7,8\}$. Free: $\{3,4,5,6\}$ ($u_2,v_2,u_3,v_3$).
+
+\medskip
+\noindent\textbf{Step 1: Shape function natural derivatives.}
+
+From \cref{eq:q4_shape}, the derivatives are:
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Natural derivatives of Q4 shape functions.}
+\label{tab:q4_dN}
+\begin{tabular}{@{}ccc@{}}
+\toprule
+Node $i$ & $\partial N_i/\partial\xi$ & $\partial N_i/\partial\eta$ \\
+\midrule
+1 & $-(1-\eta)/4$ & $-(1-\xi)/4$ \\
+2 & $+(1-\eta)/4$ & $-(1+\xi)/4$ \\
+3 & $+(1+\eta)/4$ & $+(1+\xi)/4$ \\
+4 & $-(1+\eta)/4$ & $+(1-\xi)/4$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\medskip
+\noindent\textbf{Step 2: Symbolic Jacobian.}
+
+Substituting the node coordinates $(x_1,y_1)=(0,0)$,
+$(x_2,y_2)=(48,44)$, $(x_3,y_3)=(48,60)$, $(x_4,y_4)=(0,44)$
+into \cref{eq:jacobian}:
+\begin{align}
+    J_{11} &= \frac{\partial x}{\partial\xi}
+    = \sum_i \frac{\partial N_i}{\partial\xi} x_i
+    = \frac{-(1-\eta)}{4}\cdot0 + \frac{(1-\eta)}{4}\cdot48
+      + \frac{(1+\eta)}{4}\cdot48 + \frac{-(1+\eta)}{4}\cdot0
+    = 24 \notag\\
+    J_{12} &= \frac{\partial y}{\partial\xi}
+    = \frac{(1-\eta)}{4}\cdot44 + \frac{(1+\eta)}{4}\cdot60
+      - \frac{(1+\eta)}{4}\cdot44
+    = 15 - 7\eta \notag\\
+    J_{21} &= \frac{\partial x}{\partial\eta}
+    = \frac{-(1+\xi)}{4}\cdot48 + \frac{(1+\xi)}{4}\cdot48
+    = 0 \notag\\
+    J_{22} &= \frac{\partial y}{\partial\eta}
+    = \frac{-(1+\xi)}{4}\cdot44 + \frac{(1+\xi)}{4}\cdot60
+      + \frac{(1-\xi)}{4}\cdot44
+    = 15 - 7\xi \notag
+\end{align}
+
+\begin{equation}
+    \matr{J}(\xi,\eta) =
+    \begin{bmatrix} 24 & 15-7\eta \\ 0 & 15-7\xi \end{bmatrix},
+    \qquad
+    \det|\matr{J}| = 24(15-7\xi)
+    \label{eq:jacobian_cook}
+\end{equation}
+
+\begin{equation}
+    \matr{J}^{-1} =
+    \frac{1}{24(15-7\xi)}
+    \begin{bmatrix} 15-7\xi & -(15-7\eta) \\ 0 & 24 \end{bmatrix}
+    =
+    \begin{bmatrix}
+        \dfrac{1}{24} & \dfrac{-(15-7\eta)}{24(15-7\xi)} \\[8pt]
+        0 & \dfrac{1}{15-7\xi}
+    \end{bmatrix}
+    \label{eq:Jinv_cook}
+\end{equation}
+
+\begin{remark}
+$J_{21} = 0$ because the left and right edges are both vertical
+($x_1 = x_4 = 0$, $x_2 = x_3 = 48\ \text{mm}$), so $x$ depends only
+on $\xi$, not $\eta$. Consequently $\det|\matr{J}| = 24(15-7\xi)$
+varies with $\xi$ only --- Gauss points at the same $\xi$ share the
+same determinant regardless of $\eta$.
+\end{remark}
+
+\medskip
+\noindent\textbf{Step 3: Gauss-point table.}
+
+For $2\times2$ quadrature with $g = 1/\sqrt{3}$, $w_i = 1$:
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Jacobian data at the four Gauss points ($g=1/\sqrt{3}\approx0.5774$).
+$J_{11}=24$ and $J_{21}=0$ at all points; $J^{-1}_{11}=1/24\approx0.04167$
+and $J^{-1}_{21}=0$ at all points.}
+\label{tab:q4_gauss}
+\begin{tabular}{@{}cccccccc@{}}
+\toprule
+GP & $(\xi,\eta)$ & $J_{12}=15{-}7\eta$ & $J_{22}=15{-}7\xi$
+   & $\det|\matr{J}|$ & $J^{-1}_{12}$ & $J^{-1}_{22}$ \\
+\midrule
+1 & $(-g,-g)$ & 19.04 & 19.04 & 457.0 & $-1/24$ & 0.05252 \\
+2 & $(+g,-g)$ & 19.04 & 10.96 & 263.0 & $-0.07240$ & 0.09125 \\
+3 & $(+g,+g)$ & 10.96 & 10.96 & 263.0 & $-1/24$ & 0.09125 \\
+4 & $(-g,+g)$ & 10.96 & 19.04 & 457.0 & $-0.02398$ & 0.05252 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\end{example}
