@@ -416,4 +416,150 @@ For elements~1 and~3, the column geometry gives $c=0$, $|s|=1$:
 For the beam ($\alpha=0^\circ$): $\matr{T}_6^{(2)} = \matr{I}_6$, so the beam's
 local and global stiffness matrices are identical.
 
+\medskip
+\noindent\textbf{Step 4: Global element stiffnesses.}
+
+Applying $\matr{k}^{(e)} = (\matr{T}_6^{(e)})\transpose\bar{\matr{k}}^{(e)}\matr{T}_6^{(e)}$
+to the columns with $c=0$, $s=\pm1$ exchanges the axial and transverse
+blocks in the global frame: the column's axial stiffness $a_c$ appears in
+the $v$-$v$ coupling (vertical DOFs), and the bending stiffness $b_c$
+appears in the $u$-$u$ coupling (horizontal DOFs). For element~1
+(DOFs 1,2,3,4,5,6):
+\begin{equation*}
+    \matr{k}^{(1)} =
+    \begin{bmatrix}
+         b_c  &  0   &  d_c  & -b_c &  0   &  d_c  \\
+         0    &  a_c &  0    &  0   & -a_c &  0    \\
+         d_c  &  0   & e_{4c}& -d_c &  0   & e_{2c}\\
+        -b_c  &  0   & -d_c  &  b_c &  0   & -d_c  \\
+         0    & -a_c &  0    &  0   &  a_c &  0    \\
+         d_c  &  0   & e_{2c}& -d_c &  0   & e_{4c}
+    \end{bmatrix}
+\end{equation*}
+and symmetrically for element~3 (DOFs 7,8,9,10,11,12) with $s=-1$
+(sign changes on the $d_c$ off-diagonal terms involving the $v$--$\theta$
+coupling). Element~2 is unchanged by the identity transformation.
+
+\medskip
+\noindent\textbf{Step 5: Global assembly.}
+
+The $12\times12$ global stiffness $\stiff$ is assembled by adding each
+$\matr{k}^{(e)}$ into the positions given by its DOF list
+(Table~\ref{tab:frame_elements}). Node~2 (DOFs 4,5,6) receives
+contributions from elements~1 and~2; node~3 (DOFs 7,8,9) receives
+contributions from elements~2 and~3. The full $12\times12$ matrix is
+computed by \Cref{lst:frame_portal}.
+
+\medskip
+\noindent\textbf{Step 6: Load vector and boundary conditions.}
+
+The global load vector has two contributions:
+\begin{itemize}
+    \item \textbf{Lateral force} $F=10{,}000\ \text{N}$ (rightward) at
+          DOF~4 ($u_2$): $F_4 = +10{,}000\ \text{N}$.
+    \item \textbf{Distributed load} $q = 5\ \text{N/mm}$ (downward,
+          $q_0 = -5\ \text{N/mm}$) on element~2 ($L_b = 4000\ \text{mm}$,
+          $\matr{T}_6^{(2)} = \matr{I}$):
+          \[
+            \vect{f}^{(2)}_q
+            = \frac{q_0 L_b}{12}
+              \begin{bmatrix}0\\6\\L_b\\0\\6\\{-L_b}\end{bmatrix}
+            = \frac{-5 \times 4000}{12}
+              \begin{bmatrix}0\\6\\4000\\0\\6\\{-4000}\end{bmatrix}
+            =
+              \begin{bmatrix}
+                0\\ -10{,}000\\ -6.667\times10^6\\
+                0\\ -10{,}000\\ +6.667\times10^6
+              \end{bmatrix}
+              \begin{bmatrix}\\\text{N}\\\text{N\,mm}\\\\\text{N}\\\text{N\,mm}\end{bmatrix}
+              \quad\text{(DOFs 4--9)}.
+          \]
+\end{itemize}
+Applying the clamped BCs (DOFs $\{1,2,3,10,11,12\} = 0$) and retaining only
+the six free DOFs gives the reduced $6\times6$ system:
+\[
+    \stiff_{ff}\,\vect{u}_f = \vect{F}_f,
+    \qquad
+    \vect{u}_f = [u_2,v_2,\theta_2,u_3,v_3,\theta_3]\transpose,
+\]
+\[
+    \vect{F}_f =
+    [+10{,}000,\; -10{,}000,\; -6.667\times10^6,\;
+     0,\; -10{,}000,\; +6.667\times10^6]\transpose\ \text{(N and N\,mm)}.
+\]
+
+\medskip
+\noindent\textbf{Step 7: Solution (MATLAB-verified, \Cref{lst:frame_portal}).}
+
+\begin{align*}
+    u_2 &= +8.296\ \text{mm}, &
+    v_2 &= -0.017\ \text{mm}, &
+    \theta_2 &= -3.687\times10^{-3}\ \text{rad}, \\
+    u_3 &= +8.272\ \text{mm}, &
+    v_3 &= -0.031\ \text{mm}, &
+    \theta_3 &= -2.15\times10^{-4}\ \text{rad}.
+\end{align*}
+The dominant response is the lateral sway ($u_2 \approx u_3 \approx 8.28\ \text{mm}$)
+induced by the horizontal force $F$. The small difference $u_2 - u_3 =
+0.024\ \text{mm}$ reflects the beam's axial flexibility. Both joints deflect
+slightly downward ($v_2, v_3 < 0$) under the gravity load.
+
+\medskip
+\noindent\textbf{Step 8: Support reactions.}
+
+\begin{align*}
+    R_{1x} &= -2{,}580.8\ \text{N}, &
+    R_{1y} &= +6{,}932.9\ \text{N}, &
+    M_1    &= +6{,}451{,}977\ \text{N\,mm}, \\
+    R_{4x} &= -7{,}419.2\ \text{N}, &
+    R_{4y} &= +13{,}067.1\ \text{N}, &
+    M_4    &= +11{,}279{,}478\ \text{N\,mm}.
+\end{align*}
+\noindent Equilibrium check:
+\begin{align*}
+    \textstyle\sum F_x &= -2{,}580.8 + (-7{,}419.2) + 10{,}000 = 0\ \checkmark\\
+    \textstyle\sum F_y &= 6{,}932.9 + 13{,}067.1 - 5\times4000 = 0\ \checkmark
+\end{align*}
+
+\medskip
+\noindent\textbf{Step 9: Element internal forces.}
+
+Local end forces are recovered via
+$\bar{\vect{f}}^{(e)}_{\text{int}} =
+\bar{\matr{k}}^{(e)}\bigl(\matr{T}_6^{(e)}\vect{u}^{(e)}\bigr)
+- \bar{\vect{f}}^{(e)}_{\text{load}}$
+(see \cref{sec:frame_internal}). The values at each end are:
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Element end forces in local coordinates (N and N\,mm).
+Tension positive for $\bar{N}$; sagging positive for $\bar{M}$.}
+\label{tab:frame_internal}
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+Element & $\bar{N}_i$ & $\bar{V}_i$ & $\bar{M}_i$
+        & $\bar{N}_j$ & $\bar{V}_j$ & $\bar{M}_j$ \\
+        & (N) & (N) & (N\,mm) & (N) & (N) & (N\,mm)\\
+\midrule
+1 -- left col  & $+6{,}932.9$ & $+2{,}580.8$ & $+6{,}451{,}977$ & $-6{,}932.9$ & $-2{,}580.8$ & $+1{,}290{,}284$ \\
+2 -- beam      & $+7{,}419.2$ & $+6{,}932.9$ & $-1{,}290{,}284$ & $-7{,}419.2$ & $+13{,}067.1$ & $-10{,}978{,}261$ \\
+3 -- right col & $+13{,}067.1$ & $+7{,}419.2$ & $+10{,}978{,}261$ & $-13{,}067.1$ & $-7{,}419.2$ & $+11{,}279{,}478$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The MATLAB script (\Cref{lst:frame_portal}) plots the deflected shape and
+the bending moment, shear force, and axial force diagrams
+(\cref{fig:frame_portal_results}).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.88\textwidth]{figures/frame_portal_results}
+\caption{Portal frame results: deflected shape (left, displacements
+magnified $\times100$) and internal force diagrams (right) for bending
+moment (blue), shear (red), and axial force (green).}
+\label{fig:frame_portal_results}
+\end{figure}
+
 \end{example}
