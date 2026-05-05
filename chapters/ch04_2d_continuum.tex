@@ -745,4 +745,81 @@ numerically (\Cref{lst:q4cook}). The MATLAB-verified result is:
     \label{eq:ke_q4_cook}
 \end{equation}
 
+\medskip
+\noindent\textbf{Step 7: Boundary conditions and reduced system.}
+
+Clamping the left edge sets DOFs $\{1,2,7,8\} = 0$. The four free DOFs
+$\{3,4,5,6\}$ ($u_2,v_2,u_3,v_3$) satisfy the $4\times4$ reduced system:
+
+\begin{equation}
+    10^3\times
+    \begin{bmatrix}
+         85.76 & -34.66 & -37.68 &  21.20 \\
+        -34.66 &  77.89 &  23.13 & -61.06 \\
+        -37.68 &  23.13 &  37.68 &  -9.66 \\
+         21.20 & -61.06 &  -9.66 &  61.06
+    \end{bmatrix}
+    \begin{bmatrix} u_2 \\ v_2 \\ u_3 \\ v_3 \end{bmatrix}
+    =
+    \begin{bmatrix} 0 \\ 50 \\ 0 \\ 50 \end{bmatrix}\ \text{N}
+    \label{eq:Kff_q4}
+\end{equation}
+
+\medskip
+\noindent\textbf{Step 8: Solution (MATLAB-verified, \Cref{lst:q4cook}).}
+
+\begin{align*}
+    u_2 &= -9.3\times10^{-5}\ \text{mm}, &
+    v_2 &= +8.210\times10^{-3}\ \text{mm}, \\
+    u_3 &= -2.926\times10^{-3}\ \text{mm}, &
+    v_3 &= +8.597\times10^{-3}\ \text{mm}.
+\end{align*}
+
+The dominant response is vertical (in the direction of loading): both right-edge
+nodes deflect upward by approximately $8.4\ \mu\text{m}$. The small horizontal
+displacements ($\sim\!3\ \mu\text{m}$) reflect the shear-induced distortion of
+the tapered geometry. The deformed shape is shown in \cref{fig:q4_cook_results}.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.62\textwidth]{figures/q4_cook_results}
+\caption{Cook membrane: undeformed (solid) and deformed shape (dashed,
+magnified $\times5000$). Both right-edge nodes deflect vertically;
+the tapered geometry induces small lateral movement.}
+\label{fig:q4_cook_results}
+\end{figure}
+
+\medskip
+\noindent\textbf{Step 9: Stress recovery at Gauss points.}
+
+The stresses $\vect{\sigma}^e = \matr{D}\,\matr{B}(\xi_p,\eta_p)\,\vect{u}^e$
+are evaluated at each Gauss point:
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Stresses at the four Gauss points (N/mm$^2$).}
+\label{tab:q4_stresses}
+\begin{tabular}{@{}ccccc@{}}
+\toprule
+GP & $(\xi,\eta)$ & $\sigma_x$ & $\sigma_y$ & $\tau_{xy}$ \\
+\midrule
+1 & $(-g,-g)$ & $-0.100$ & $+0.121$ & $+4.181$ \\
+2 & $(+g,-g)$ & $+5.436$ & $+2.608$ & $+1.608$ \\
+3 & $(+g,+g)$ & $+0.173$ & $+1.029$ & $+1.860$ \\
+4 & $(-g,+g)$ & $-3.128$ & $-0.788$ & $+4.327$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{remark}
+The stresses vary significantly across the element --- a key difference
+from the CST, which yields constant stress. The large $\tau_{xy}$ values
+at GPs~1 and~4 (left side of the element) reflect the shear dominance
+near the clamped edge, where bending is most constrained. This stress
+variation within the element is what the Q4 brings over the CST: it can
+represent linearly varying strains, which better captures the true
+behaviour of the Cook membrane under in-plane shear.
+\end{remark}
+
 \end{example}
