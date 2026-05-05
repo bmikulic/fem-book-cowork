@@ -70,7 +70,7 @@
 **Element data:**
 - Element 1: node 1→2, left column, α = 90°, L = H
 - Element 2: node 2→3, beam, α = 0°, L = B
-- Element 3: node 3→4, right column, α = 270° (or −90°), L = H
+- Element 3: node 3→4, right column, α = −90° (pointing downward), L = H
 
 **Steps:**
 1. Element data table (L, α, c, s, EA/L, EI/L³ for each element)
