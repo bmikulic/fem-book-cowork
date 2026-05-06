@@ -536,22 +536,22 @@ upward at each of nodes~2 and~3.
        (-5,0) rectangle (0,44);
   \draw[thick] (0,0) -- (0,44);
 
-  %% Nodes
-  \filldraw (0, 0) circle (3pt) node[left=4pt] {\small\bfseries 1 $(0,0)$};
-  \filldraw (48,44) circle (3pt) node[right=4pt] {\small\bfseries 2 $(48,44)$};
-  \filldraw (48,60) circle (3pt) node[right=4pt] {\small\bfseries 3 $(48,60)$};
-  \filldraw (0, 44) circle (3pt) node[left=4pt] {\small\bfseries 4 $(0,44)$};
+  %% Nodes -- labels in free quadrants away from wall, dim lines, and force arrows
+  \filldraw (0, 0)  circle (3pt) node[below left=4pt] {\small\bfseries 1 $(0,0)$};
+  \filldraw (48,44) circle (3pt) node[right=4pt]      {\small\bfseries 2 $(48,44)$};
+  \filldraw (48,60) circle (3pt) node[right=4pt]      {\small\bfseries 3 $(48,60)$};
+  \filldraw (0, 44) circle (3pt) node[above left=4pt] {\small\bfseries 4 $(0,44)$};
 
   %% Forces at nodes 2 and 3
   \draw[force] (48,44) -- ++(0,14) node[right=2pt,midway] {$50\ \text{N}$};
   \draw[force] (48,60) -- ++(0,14) node[right=2pt,midway] {$50\ \text{N}$};
 
-  %% Dimensions
-  \draw[<->,thin] (0,-8) -- (48,-8)
+  %% Dimensions -- pushed out so they clear all labels
+  \draw[<->,thin] (0,-14) -- (48,-14)
        node[fill=white,inner sep=1pt,midway] {$48\ \text{mm}$};
-  \draw[<->,thin] (-10,0) -- (-10,44)
+  \draw[<->,thin] (-22,0) -- (-22,44)
        node[fill=white,inner sep=1pt,midway,rotate=90] {$44\ \text{mm}$};
-  \draw[<->,thin] (54,44) -- (54,60)
+  \draw[<->,thin] (72,44) -- (72,60)
        node[fill=white,inner sep=1pt,midway,rotate=90] {$16\ \text{mm}$};
 
 \end{tikzpicture}
