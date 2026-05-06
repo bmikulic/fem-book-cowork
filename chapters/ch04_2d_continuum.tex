@@ -160,7 +160,9 @@ horizontal roller at node~4 ($u_4 = 0$).
   \node at (0.25,0.70) {\small\textcircled{\small 2}};
 
   %% Nodes
-  \filldraw (0,0) circle (2.5pt) node[below left=4pt] {\small\bfseries 1 $(0,0)$};
+  \filldraw (0,0) circle (2.5pt);
+  \node[above left=2pt] at (0,0) {\small\bfseries 1};
+  \node[below=0.42cm]   at (0,0) {\small\bfseries $(0,0)$};
   \filldraw (1,0) circle (2.5pt) node[below right=2pt] {\small\bfseries 2 $(1,0)$};
   \filldraw (1,1) circle (2.5pt) node[above right=2pt] {\small\bfseries 3 $(1,1)$};
   \filldraw (0,1) circle (2.5pt) node[above right=2pt] {\small\bfseries 4 $(0,1)$};
@@ -184,7 +186,7 @@ horizontal roller at node~4 ($u_4 = 0$).
        node[right=2pt] {$F/2 = 500\ \text{kN}$};
 
   %% Dimensions
-  \draw[<->,thin] (0,-0.35) -- (1,-0.35)
+  \draw[<->,thin] (0,-0.55) -- (1,-0.55)
        node[fill=white,inner sep=1pt,midway] {$1\ \text{m}$};
   \draw[<->,thin] (-0.55,0) -- (-0.55,1)
        node[fill=white,inner sep=1pt,midway,rotate=90] {$1\ \text{m}$};
