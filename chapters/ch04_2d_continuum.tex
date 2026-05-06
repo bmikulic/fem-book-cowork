@@ -537,21 +537,25 @@ upward at each of nodes~2 and~3.
   \draw[thick] (0,0) -- (0,44);
 
   %% Nodes -- labels in free quadrants away from wall, dim lines, and force arrows
-  \filldraw (0, 0)  circle (3pt) node[below left=4pt] {\small\bfseries 1 $(0,0)$};
-  \filldraw (48,44) circle (3pt) node[right=4pt]      {\small\bfseries 2 $(48,44)$};
-  \filldraw (48,60) circle (3pt) node[right=4pt]      {\small\bfseries 3 $(48,60)$};
-  \filldraw (0, 44) circle (3pt) node[above left=4pt] {\small\bfseries 4 $(0,44)$};
+  \filldraw (0, 0)  circle (3pt) node[below left=4pt]  {\small\bfseries 1 $(0,0)$};
+  \filldraw (48,44) circle (3pt) node[below right=4pt] {\small\bfseries 2 $(48,44)$};
+  \filldraw (48,60) circle (3pt) node[above right=4pt] {\small\bfseries 3 $(48,60)$};
+  \filldraw (0, 44) circle (3pt) node[above left=4pt]  {\small\bfseries 4 $(0,44)$};
 
-  %% Forces at nodes 2 and 3
-  \draw[force] (48,44) -- ++(0,14) node[right=2pt,midway] {$50\ \text{N}$};
-  \draw[force] (48,60) -- ++(0,14) node[right=2pt,midway] {$50\ \text{N}$};
+  %% Forces at nodes 2 and 3 -- midway labels on the geometry side so the
+  %% 16 mm dim midway annotation has the right side to itself
+  \draw[force] (48,44) -- ++(0,14) node[left=2pt,midway] {$50\ \text{N}$};
+  \draw[force] (48,60) -- ++(0,14) node[left=2pt,midway] {$50\ \text{N}$};
 
-  %% Dimensions -- pushed out so they clear all labels
+  %% Dimensions -- 16 mm uses extension lines so it stays visually
+  %% attached to the right edge it measures
   \draw[<->,thin] (0,-14) -- (48,-14)
        node[fill=white,inner sep=1pt,midway] {$48\ \text{mm}$};
   \draw[<->,thin] (-22,0) -- (-22,44)
        node[fill=white,inner sep=1pt,midway,rotate=90] {$44\ \text{mm}$};
-  \draw[<->,thin] (95,44) -- (95,60)
+  \draw[thin] (48,44) -- (56,44);
+  \draw[thin] (48,60) -- (56,60);
+  \draw[<->,thin] (54,44) -- (54,60)
        node[fill=white,inner sep=1pt,midway,rotate=90] {$16\ \text{mm}$};
 
 \end{tikzpicture}
