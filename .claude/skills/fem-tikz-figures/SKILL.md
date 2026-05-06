@@ -26,11 +26,12 @@ Verify all of these mentally (or by sketching coords) **before** running `pdflat
 
 1. **Sign convention.** Every DOF arrow points along `+x` (or `+y`, etc.). Don't flip signs to make arrows point "outward" — the convention is assumed-positive directions, regardless of which side of the geometry the node sits on.
 2. **Label vs. support.** For each node with a support, the label sits in the free quadrant *opposite* the support. Pin below → label above-left or above-right; roller on left → label on right; roller above → label below.
-3. **Label vs. arrows.** Same check, opposite direction from any DOF/force arrow extending from the node.
+3. **Label vs. arrows.** Same check, opposite direction from any DOF/force arrow extending from the node. If both `+x` and `+y` arrows leave the node (the standard at every node), the entire upper-right quadrant is occupied — choose a non-upper-right corner.
+3a. **Tiebreaker for corner nodes.** When a node sits at a geometry corner so two quadrants are interior to the body and only two are free, prefer the free quadrant that lies *outside* the geometry over the one that lies *inside* it (label sitting on the gray-fill is harder to read).
 4. **Pin "ground line."** The horizontal line below a pin's triangle goes from `(-w, y)` to `(+w, y)` — both endpoints at the *same* `y`. A slanted line is a typo.
 5. **Dimension clearance.** Each dim line has ≥0.05 cm clear of every label edge and support edge along its full extent. If a label widens, push the dim line out — don't accept the collision.
 6. **Float placement.** Results figures inside `\begin{example}…\end{example}` use `[H]` (from package `float`), never `[htbp]`. Anything else lets LaTeX drift the figure past `\end{example}`.
-7. **Color convention.** Blue (`blue!70!black`, thick) for displacements/kinematics; red (`red!75!black`, ultra thick) for forces/statics; lighter blue with multiple short arrows for distributed loads; hatched walls (`pattern=north east lines`) for fixed supports. No new accent colors — they're load-bearing.
+7. **Color convention.** Blue (`blue!70!black`, thick) for displacements/kinematics; red (`red!75!black`, ultra thick) for forces/statics; lighter blue with multiple short arrows for distributed loads; hatched walls (`pattern=north east lines`) for fixed supports. **Geometry is always black** — outer outlines, mesh element boundaries, dimension lines, and any other structural lines. No accent colors on geometry "for clarity" or "to distinguish element boundaries"; if the rationalization is "this isn't a force or a displacement so the color rule doesn't apply," that rationalization is wrong — geometry is black.
 8. **MATLAB typography.** Every plot script calls `book_style(fig)` immediately before the first `exportgraphics`. Default 10 pt is too small for textbook print.
 
 ## Conventions (from this codebase)
