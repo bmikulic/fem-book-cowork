@@ -163,13 +163,13 @@ horizontal roller at node~4 ($u_4 = 0$).
   \filldraw (0,0) circle (2.5pt) node[below left=2pt] {\small\bfseries 1 $(0,0)$};
   \filldraw (1,0) circle (2.5pt) node[below right=2pt] {\small\bfseries 2 $(1,0)$};
   \filldraw (1,1) circle (2.5pt) node[above right=2pt] {\small\bfseries 3 $(1,1)$};
-  \filldraw (0,1) circle (2.5pt) node[above left=2pt] {\small\bfseries 4 $(0,1)$};
+  \filldraw (0,1) circle (2.5pt) node[above right=2pt] {\small\bfseries 4 $(0,1)$};
 
   %% Pin support at node 1
   \draw[fill=gray!30,thick] (0,0) -- (-0.12,-0.18) -- (0.12,-0.18) -- cycle;
   \fill[pattern=north east lines,pattern color=gray!70]
        (-0.14,-0.18) rectangle (0.14,-0.25);
-  \draw[thick] (-0.14,-0.18) -- (0.14,-0.25);
+  \draw[thick] (-0.14,-0.18) -- (0.14,-0.18);
 
   %% Roller at node 4 (horizontal roller: free v, fixed u)
   \draw[fill=gray!30,thick] (0,1) -- (-0.12,0.82) -- (-0.12,1.18) -- cycle;
