@@ -64,34 +64,33 @@ for e = 1:2
 end
 
 %% Figure: mesh + deformed shape
-scale = 800;
+scale = 200;
 fig = figure('Units','centimeters','Position',[2,2,14,10]);
-hold on; axis equal; grid on;
+hold on; axis equal off;
 
 tri_x = xy([1,2,3,1],1); tri_y = xy([1,2,3,1],2);
-plot(tri_x, tri_y, 'k-', 'LineWidth', 1.2)
+hUnd = plot(tri_x, tri_y, 'k-', 'LineWidth', 1.2);
 tri_x = xy([1,3,4,1],1); tri_y = xy([1,3,4,1],2);
-plot(tri_x, tri_y, 'k-', 'LineWidth', 1.2)
+plot(tri_x, tri_y, 'k-', 'LineWidth', 1.2, 'HandleVisibility','off')
 
 % Deformed nodes
 xy_def = xy + scale * reshape(u,2,[])';
 tri_x = xy_def([1,2,3,1],1); tri_y = xy_def([1,2,3,1],2);
-plot(tri_x, tri_y, 'b--', 'LineWidth', 1.5)
+hDef = plot(tri_x, tri_y, 'b--', 'LineWidth', 1.5);
 tri_x = xy_def([1,3,4,1],1); tri_y = xy_def([1,3,4,1],2);
-plot(tri_x, tri_y, 'b--', 'LineWidth', 1.5)
+plot(tri_x, tri_y, 'b--', 'LineWidth', 1.5, 'HandleVisibility','off')
 
 % Node labels
 for n = 1:4
-    text(xy(n,1)-0.07, xy(n,2)+0.04, sprintf('  %d',n), 'FontSize',10)
+    text(xy(n,1)-0.07, xy(n,2)+0.04, sprintf('%d',n), 'FontSize',11,'FontWeight','bold')
 end
 
 % Element labels
 c1 = mean(xy([1,2,3],:)); text(c1(1),c1(2),'\textcircled{1}','Interpreter','latex','FontSize',12,'HorizontalAlignment','center')
 c2 = mean(xy([1,3,4],:)); text(c2(1),c2(2),'\textcircled{2}','Interpreter','latex','FontSize',12,'HorizontalAlignment','center')
 
-xlabel('x (m)'); ylabel('y (m)')
-title(sprintf('CST mesh (solid) and deformed shape \\times%d (dashed)', scale))
-legend({'Undeformed','','Deformed (\\times800)',''}, 'Location','northwest')
+legend([hUnd, hDef], {'Undeformed', sprintf('Deformed (\\times%d)', scale)}, ...
+       'Location','northwest','Box','off')
 
 book_style(fig);
 exportgraphics(fig,'../figures/cst_example_results.pdf','ContentType','vector')
