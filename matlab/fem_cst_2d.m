@@ -88,7 +88,7 @@ end
 % Element labels: explicit circles so the numerals have visible margin
 c1 = mean(xy([1,2,3],:));
 c2 = mean(xy([1,3,4],:));
-r_elem = 0.07;
+r_elem = 0.045;
 rectangle('Position',[c1(1)-r_elem, c1(2)-r_elem, 2*r_elem, 2*r_elem], ...
           'Curvature',[1 1],'EdgeColor','k','LineWidth',1)
 text(c1(1), c1(2), '1', 'HorizontalAlignment','center', ...
@@ -97,9 +97,6 @@ rectangle('Position',[c2(1)-r_elem, c2(2)-r_elem, 2*r_elem, 2*r_elem], ...
           'Curvature',[1 1],'EdgeColor','k','LineWidth',1)
 text(c2(1), c2(2), '2', 'HorizontalAlignment','center', ...
      'VerticalAlignment','middle','FontSize',11)
-
-legend([hUnd, hDef], {'Undeformed', sprintf('Deformed (\\times%d)', scale)}, ...
-       'Location','northwest','Box','on')
 
 book_style(fig);
 exportgraphics(fig,'../figures/cst_example_results.pdf','ContentType','vector')
