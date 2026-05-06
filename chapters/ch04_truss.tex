@@ -36,28 +36,39 @@ $(\bar{x}, \bar{y})$ coordinates. With $c = \cos\theta$, $s = \sin\theta$:
 
 \begin{figure}[htbp]
 \centering
-\begin{tikzpicture}[>=Stealth, scale=1.15]
+\begin{tikzpicture}[>=Stealth, scale=1.15,
+    disp/.style={->,thick,blue!70!black}]
   %% Element from node 1 (0,0) to node 2 at 35 degrees, length ~4
   \coordinate (N1) at (0,0);
   \coordinate (N2) at ({4*cos(35)},{4*sin(35)});
-  %% Bar
-  \draw[line width=2.5pt,gray!55] (N1) -- (N2);
-  \filldraw (N1) circle (3.5pt) node[below left=1pt] {\small 1};
-  \filldraw (N2) circle (3.5pt) node[above right=1pt] {\small 2};
-  %% Global axes
-  \draw[->,thick] (N1) -- ++(2.2,0) node[right] {$x$};
-  \draw[->,thick] (N1) -- ++(0,2.2) node[above] {$y$};
-  %% Local axes (rotated by 35 deg)
-  \draw[->,thick,blue!75!black] (N1) -- ++({2.0*cos(35)},{2.0*sin(35)}) node[right] {$\bar{x}$};
-  \draw[->,thick,blue!75!black] (N1) -- ++({-2.0*sin(35)},{2.0*cos(35)}) node[above left] {$\bar{y}$};
+
+  %% Bar -- thick black per book convention
+  \draw[thick] (N1) -- (N2);
+
+  %% Global axes at N1
+  \draw[->,thick] (N1) -- ++(2.6,0) node[right] {$x$};
+  \draw[->,thick] (N1) -- ++(0,2.6) node[above] {$y$};
+
+  %% Local axes at N1 (along bar and perpendicular) -- black, distinguished
+  %% from global axes by labels and orientation
+  \draw[->,thick] (N1) -- ++({2.2*cos(35)},{2.2*sin(35)}) node[right=2pt] {$\bar{x}$};
+  \draw[->,thick] (N1) -- ++({-2.2*sin(35)},{2.2*cos(35)}) node[above left=2pt] {$\bar{y}$};
+
   %% Angle arc and label
   \draw (1.1,0) arc[start angle=0, end angle=35, radius=1.1];
   \node at ({1.35*cos(17)},{1.35*sin(17)}) {$\theta$};
-  %% DOF arrows at N2
-  \draw[->,dashed,thick,red!65!black] (N2) -- ++(1.0,0) node[right] {\small $u_2$};
-  \draw[->,dashed,thick,red!65!black] (N2) -- ++(0,1.0) node[above] {\small $v_2$};
-  %% DOF label at N1
-  \node[red!65!black,below right=2pt] at (N1) {\small $u_1,\,v_1$};
+
+  %% DOF arrows at N1 (assumed-positive +x, +y)
+  \draw[disp] (N1) -- ++(0.95,0) node[below=2pt] {\small $u_1$};
+  \draw[disp] (N1) -- ++(0,0.95) node[left=2pt]  {\small $v_1$};
+
+  %% DOF arrows at N2 (assumed-positive +x, +y)
+  \draw[disp] (N2) -- ++(0.95,0) node[below=2pt] {\small $u_2$};
+  \draw[disp] (N2) -- ++(0,0.95) node[left=2pt]  {\small $v_2$};
+
+  %% Nodes drawn last so they sit on top of arrow tails
+  \filldraw (N1) circle (3.5pt) node[below left=4pt]  {\small\bfseries 1};
+  \filldraw (N2) circle (3.5pt) node[above left=4pt]  {\small\bfseries 2};
 \end{tikzpicture}
 \caption{2D truss element inclined at angle $\theta$: global axes $(x,y)$ and local axes $(\bar{x},\bar{y})$.}
 \label{fig:truss_element}
